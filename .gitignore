@@ -1,0 +1,29 @@
+# Sim4Life プロジェクトファイル（大きい・環境依存・再配布不可）
+*.smash
+*.sab
+
+# モデルデータ（IT'IS Virtual Population = 再配布不可。README の入手方法を参照）
+models/
+*.vip
+
+# シミュレーション出力（E場・電位など大きいフィールド）
+results/fields/
+*.npy
+*.npz
+*.mat
+
+# 秘密情報
+.env
+.env.*
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS
+.DS_Store

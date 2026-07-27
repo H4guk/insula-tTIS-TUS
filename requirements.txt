@@ -1,0 +1,5 @@
+# scripts/ は Sim4Life.lite のブラウザ内蔵 Python コンソール（Python 3.11.9）で実行する。
+# s4l_v1 / XCoreModeling は Sim4Life.lite が提供する（pip では入らない）。
+# 下記は後処理・可視化で使う標準ライブラリ（Lite コンソールに同梱済み・ローカル解析用）。
+numpy>=1.26
+matplotlib>=3.9
