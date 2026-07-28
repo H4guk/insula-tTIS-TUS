@@ -15,6 +15,9 @@ import numpy as np
 
 
 # ===== E 場抽出（lec8・検証済み）=====
+# ⚠️ Python で作った sim は document.AllSimulations に自動登録されない（v10）。
+#    Run 後に document.AllSimulations.Add(sim) で登録してからでないと、下の
+#    辞書アクセス document.AllSimulations[sim_name] も sim.Results() も使えない。
 def get_E(sim_name):                       # シミュ名 → E場 numpy配列 を返す
     sim = document.AllSimulations[sim_name]
     res = sim.Results(); res.UpdateAll()

@@ -46,7 +46,7 @@ insula-tTIS-TUS/
 2. `scripts/load_yoonsun.py` を実行 → Yoon-sun をモデルツリーに読み込む（GUI では不可・Python 経由）。
 3. `scripts/detect_coordinate_system.py` → 軸の意味・ランドマーク・島皮質 ROI を確認。
 4. `scripts/place_electrodes.py` → Montage I（T7 / P7 / Fp1 / Fp2）の電極パッドを生成。
-5. `scripts/assign_materials.py` → 頭部 59 組織に σ を割り当て（skin は 0.465 に上書き）。
+5. `scripts/assign_materials.py` → 頭部 59 組織に σ を割り当て（IT'IS LF DB 自動リンク）。
 6. `scripts/setup_simulation.py` → ±電位 BC とグリッドを設定。
 7. **各ステップ後に `s4l_v1.document.Save()` で保存**（保存忘れで状態が壊れた事故あり）。
 8. ペア1（T7–P7）／ペア2（Fp1–Fp2）を別シミュとして Run（2000 / 2010 Hz）。

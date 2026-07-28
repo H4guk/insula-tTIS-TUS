@@ -15,7 +15,9 @@
 - **モンタージュ**: Montage I（Inoue 2025・島皮質狙い最頻・focality 最良）。
   - ペア1 = T7–P7（左側頭を縦・2000 Hz 相当）/ ペア2 = Fp1–Fp2（前頭を横・2010 Hz 相当）。
   - 群レベル最適電流 I1=0.891 / I2=1.109 mA（I1+I2=2mA）。
-- **物理**: Electro Quasi-Static（EQS・準静的）。σ は IT'IS LF DB + skin を実効頭皮値 0.465 S/m に上書き。
+- **物理**: Electro Quasi-Static（EQS・準静的）。σ は IT'IS LF DB に自動リンク（頭部 59 組織）。
+  - ⚠️ 未解決: 実機の Run が `no lossy dielectrics / no used dofs` で全点 NaN になる事象あり（保存忘れ由来の不整合か DB リンク仕様か切り分け中）。次回クリーン構築で再現確認。
+  - 候補メモ（未検証・未適用）: tES 文献の実効頭皮 σ 0.465 S/m 上書き。実機で必要か未確認。
 - **TI 定量**: 2 場の各点振幅から `TI = 2·min(|E1|,|E2|)`（Grossman 等方近似）。ROI 内は体積重み平均。
 - **1V 駆動 → 後段でスケール**（EQS は線形）。Inoue の電流比再現は計算後に。
 

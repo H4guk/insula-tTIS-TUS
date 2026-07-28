@@ -51,10 +51,14 @@ GRID_BOX_MAX = (202.0, 352.0, 1665.0)
 GRID_STEP_HEAD_MM = 1.0
 GRID_STEP_BODY_MM = 5.0
 
-# ---- 材料 σ の上書き（tES 標準の実効頭皮 σ）----
-# IT'IS LF の Skin は 0.0002 S/m（乾燥角質）で非物理的 → SimNIBS/ROAST 標準へ。
-SKIN_CONDUCTIVITY_OVERRIDE = 0.465   # S/m
-SKIN_ENTITIES = ("Skin", "Ear_skin_left", "Ear_skin_right")
+# ---- 材料 σ（IT'IS LF DB 自動リンク・assign_materials.py 参照）----
+# ⚠️ 未検証の候補メモ（実機では未適用）:
+#   tES 文献では実効頭皮 σ に 0.465 S/m（SimNIBS/ROAST 標準）を使うことがある。
+#   ただし Yoon-sun 実機でこの上書きが必要か・値が妥当かは未確認。
+#   現状のスクリプトは DB リンクした σ をそのまま使う（上書きしない）。
+#   材料σが効かない（no lossy dielectrics）問題の解決とは別軸なので、実機確定後に判断する。
+# SKIN_CONDUCTIVITY_OVERRIDE = 0.465   # S/m（候補・未適用）
+# SKIN_ENTITIES = ("Skin", "Ear_skin_left", "Ear_skin_right")
 
 # ---- 照合先（先行研究 Inoue 2025）----
 SELECTIVITY_REFERENCE = 0.40         # 非標的平均 / 標的平均（Montage I ≈0.40）
