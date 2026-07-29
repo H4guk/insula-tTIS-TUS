@@ -67,6 +67,8 @@ MANUAL = {
     'Mandible_cortical': 'Skull (Cortical)', 'Mandible_cancellous': 'Skull (Cancellous)',
     'Hyoid_cortical': 'Bone (Cortical)', 'Trachea_wall': 'Trachea', 'Esophagus_wall': 'Esophagus',
     'Lymph_node': 'Lymphnode',
+    'Ear_cartilage_left': 'Cartilage', 'Ear_cartilage_right': 'Cartilage',
+    'Ear_skin_left': 'Skin', 'Ear_skin_right': 'Skin',
 }
 for i in range(1, 6):
     MANUAL['Vertebra_cortical_C%d' % i] = 'Bone (Cortical)'
