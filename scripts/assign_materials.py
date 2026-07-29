@@ -69,11 +69,18 @@ for e in model.AllEntities():
 
 
 # ③ ViP 組織名 → ITISLF 材料名 の対応表
+def _words(s):
+    # ★アンダースコアで必ず区切る: \w は '_' を単語文字扱いにするため
+    #   'Cerebrospinal_fluid' が1トークンになり DB 'Cerebrospinal Fluid'(2語) と一致しない。
+    #   [a-z0-9]+ で切ると _ / 空白 / 括弧 / バックスラッシュ すべてが区切りになる。
+    return set(re.findall(r'[a-z0-9]+', s.lower()))
+
+
 def try_match(vip):
-    """語順・括弧を無視した集合一致で DB 材料名を探す。"""
-    vw = set(re.findall(r'\w+', vip.lower()))
+    """語順・括弧・アンダースコアを無視した集合一致で DB 材料名を探す。"""
+    vw = _words(vip)
     for db in db_names:
-        if set(re.findall(r'\w+', db.lower())) == vw:
+        if _words(db) == vw:
             return db
     return None
 
