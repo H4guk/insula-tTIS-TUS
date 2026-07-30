@@ -1,43 +1,55 @@
 # 進捗ログ
 
 > 詳細な時系列は Obsidian の `Claude/DailyLogs/` に記録。ここは本リポジトリ視点の要約。
+> 日ごとの詳細ログ: `docs/log-2026-07-31.md` / 工程ごとの検証記録: `docs/phase1-dev.md`
 
-## 現在地（2026-07-30 時点）
-tTIS フェーズ1 の配管を Yoon-sun 上で構築中。**Step 1 は未完了**だが、長年の全点 NaN の**真因を特定・修正**した。残る壁は Run 起動拒否のみ。
+## 現在地（2026-07-31 時点）
+tTIS Phase 1（#4・dev）を工程ごとに検証中。**工程1〜4 は検証済みで正常**、
+**ブロッカーは工程7（グリッド→ボクセル）のみ**。
 
-### ✅ 全点 NaN の真因を確定（2026-07-30・SolverLog + Voxeler.log で決着）
-- `Input.log`: `Degree of freedoms: ... 0 unknowns, 0 Dirichlet points, ... no lossy dielectrics`
-- `Voxeler.log`: **`Error: The boundary component 'Elec_T7' is not being considered in the voxeling process.`**
-- **真因 = 駆動電極 Elec_* に材料を割り当てていなかった**。材料の無いエンティティは Voxeler がボクセル化しない
-  → 電極が除外 → Dirichlet BC が実体を持たず Dirichlet=0、導電領域も書かれず no lossy dielectrics → 解く dof ゼロ → NaN。
-  （保存忘れでも DBリンク仕様でもなかった。）
-- **修正**: 駆動電極 Elec_T7/P7 に σ=1.6 S/m を直接付与すれば Voxeler が電極を含める。
+### ✅ 解決済み
+- **全点 NaN の真因（電極の材料漏れ）** — 材料の無いエンティティは Voxeler がボクセル化しない（2026-07-30）。
+- **Run 起動拒否** — 原因は**同一ソリッドに材料σと Dirichlet BC を両方付けていたこと**。
+  BC を**電極の外側の面**（`xc.GetFaces` → `IsPlanarFace` → 頭の中心から最も遠い平面）に移すと Run が完走する（2026-07-30 深夜）。
 
-### ⚠️ 残る壁: Run 起動拒否
-- `sim.RunSimulation()` が `RuntimeError: Unable to run simulation. Please check your simulation settings.` を返す。
-- 比較的クリーンな sim でも発生。加えて**同一セッションで作り直しを重ねると** `incompatible with this type of simulation`（run済み sim への設定追加）や
-  `HDF5: attribute already exists`（同名 sim/GridBox/結果ファイルの衝突）が出る＝**セッションの状態クラッタ**。
-- **未検証**: 「セッションを完全リロードした真っさらな状態」で統合スクリプトを流すこと（これまでは汚れたセッション上で実行していた）。
+### ❌ ブロッカー: ボクセルシーンが空（工程7）
+- `Voxeler.log`: **`Voxel Scene Memory Consumption: 0.001196 kB`** ＋
+  `Error: The material component '...' is not being considered in the voxeling process.` ＋ `Voxeling succeeded.`
+- ソルバー: `Degree of freedoms: 12449814 total, 0 unknowns, 0 Dirichlet points` → 何も解かず全点 NaN。
+- **ViP 固有でもセッション状態の汚れでもない**（自作ソリッドの箱でも・リロード直後でも再現）＝**最小再現ケース確定**。
+- 本命の仮説: **エンティティが sim の Model / solid region に登録されていない**
+  （v10 で `AssignEntities` 廃止分の代替手順が抜けている疑い。ソルバー警告
+  `Check your model and solid region settings.` と整合）。
+- 次の一手: ①**GUI で最小 sim を焼く**（lec6〜8 は GUI で成功していた）→ 差分を Python に翻訳
+  ②焼けなければ ZMT サポートへ最小再現ケースで照会。
 
-## 到達済み
-- Yoon-sun 読み込み（Python 経由・GUI 不可）。
-- 座標系の実測確定（+X=前 / +Y=左 / +Z=上・AC-PC 傾き 3.18°＝補正不要）。
-- 島皮質 ROI 確定（粗 ROI 球・中心 (99.1,295.0,1562.2)mm・r=10mm・左）。
-- Montage I 電極の座標算出 → 皮膚投影 → 電極パッド 4 枚生成（Elec_T7/P7/Fp1/Fp2）。
-- 材料σ割り当て（頭部59組織・IT'IS LF DB）＋ **アンダースコアマッチ修正**（`[a-z0-9]+`）＋ **電極にも材料**。
-- **全点 NaN の真因特定＋修正**（電極の材料漏れ）。
-- 統合スクリプト `scripts/run_step1_lf1.py`（全修正込み・クリーン実行用）を用意。
+### 進め方の変更（2026-07-31）
+理解を伴わないまま積み上げた診断・統合スクリプトを**削除**し、**9工程 = 9スクリプト**で作り直す方針に変更。
+削除分は git 履歴（`3ac4756`〜`440b6e6`）から復元可能で、知見は `docs/log-2026-07-31.md` と
+`docs/phase1-dev.md` に残してある。
 
-## 未達（Step 1 の残り）
-- Run 起動拒否（`check your simulation settings`）を解消して有効な E 場を得る。← ★次回の最優先
-  - まず「完全リロード → 統合スクリプト」で状態クラッタを排した真のクリーン実行を試す。
-  - それでも拒否なら Sim4Life サポート/フォーラムへ `Input.log` 付きで照会（ツール固有の検証エラー）。
+## 到達済み（工程ごと・検証済み）
+- **工程1** Yoon-sun 読み込み（Python 経由・GUI 不可）。型は `TriangleMesh`。**ViP はライセンス保護で `ConvertToSolid` 不可**。
+- **工程2** 座標系の実測確定（+X=前 / +Y=左 / +Z=上・AC-PC 傾き 3.18°＝補正不要）。
+  頭部グリッド範囲 X4–202 / Y162–352 / Z1450–1665 が脳・頭蓋・電極をすべて含むことを確認。
+- **工程3** 島皮質 ROI 確定（粗 ROI 球・中心 (99.1,295.0,1562.2)mm・r=10mm・左）。
+  左右オフセット 34.5mm は期待値と一致、白質内部（−5.6mm）。**頭皮 25.0mm は基準 3–4cm を外れる → #9**。
+- **工程4** Montage I 電極の座標算出 → 皮膚投影 → 電極パッド 4 枚生成（Elec_T7/P7/Fp1/Fp2）。
+  皮膚層から ±0.25mm＝**またいでいる（接触OK）**。
+- 材料σ割り当ての要件を確定（頭部59組織＋**駆動電極にも σ**・`_` を単語区切りにする・期待値と実数の突き合わせ）。
+- **Run 起動拒否の解決**（BC は電極ソリッドではなく**外側の面**に付ける）。
+- 材料設定の正しい列挙口は **`sim.AllSettings`**（`AllComponents` はエンティティ参照側で σ を持たない）。
 
-## 次工程（Step 1 完了 → Step 2）
-1. **Sim4Life を完全リロード**（汚れたセッション＝壊れ sim・古い GridBox・旧結果を捨てる）。
-2. `load_yoonsun.py` → `place_electrodes.py` → **`run_step1_lf1.py`**（組織59＋電極2＋BC＋グリッド＋voxel を一括・`材料数 61 / 未マップ []` を確認）。
-3. `sim.RunSimulation(wait=True)` → E 場の `finite率 ≈100%` と `Degree of freedoms` の `Dirichlet points>0` を確認。
-   - 拒否が続く場合はサポート照会へ。
-4. ペア2（Fp1–Fp2・2010Hz）を同じ作りで `tTIS_LF2` として組み Run。
-5. `ti_analysis.py` で TI=2·min(|E1|,|E2|) → 島皮質 ROI の体積重み平均 → 選択性を ≈0.40 と照合。
-6. 位置最適化（重い工程）→ その後 TUS を同一 Yoon-sun・同一 ROI で組んで比較。
+## 未達（Phase 1 / #4 の残り）
+- **工程7 グリッド→ボクセル**: ボクセルシーンが空になる問題の突破。← ★最優先ブロッカー
+- **工程5 材料σ**: スクリプト再作成（旧版は電極スキップ #2・σ値未検証のため削除）。
+- **工程6 BC / 工程8 RUN / 工程9 検証**: スクリプト未作成。
+- ペア1・ペア2を同一グリッドで Run し、両方の E 場が有限であること（＝Phase 1 の DoD）。
+
+## 次工程
+1. **工程5（材料σ）を検証しながら作る** — 条件5点（59組織 / 電極にも σ / `_` 区切り / 期待値突き合わせ / σ レンジ検証）。
+2. **工程7 の突破** — GUI で最小 sim を焼いて Python との差分を特定、または ZMT へ最小再現ケースで照会。
+3. 工程6・8・9 を作り、ペア1 → ペア2（Fp1–Fp2・2010Hz）を同一グリッドで Run。
+4. Phase 2（#7）: `ti_analysis.py` で TI=2·min(|E1|,|E2|) → 島皮質 ROI の体積重み平均 → 選択性を ≈0.40 と照合。
+   あわせて #9（ROI 深さ）・#10（σ の出所）・#11（材料対応表の監査）を処理。
+5. Phase 3（#8）位置最適化 → Phase 4（#5）TUS → Phase 5（#6）比較。
