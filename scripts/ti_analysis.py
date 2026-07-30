@@ -89,7 +89,7 @@ if __name__ == '__main__':
     ef = document.AllSimulations[NAME1].Results()['Overall Field']['EM E(x,y,z,f0)']
     ef.Update(); fd = ef.Data
 
-    roi = sphere_mask(fd, (99.1, 295.0, 1562.2), 10.0)    # 左島皮質 ROI（configs/parameters.py）
+    roi = sphere_mask(fd, (99.1, 295.0, 1562.2), 10.0)    # 左島皮質 ROI（工程3 define_insula_roi.py）
     vol = cell_volumes(fd)
     target = roi_stats(ti, roi, vol)
     nontarget = roi_stats(ti, ~roi, vol)
