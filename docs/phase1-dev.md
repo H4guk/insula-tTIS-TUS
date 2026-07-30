@@ -6,7 +6,27 @@
 このファイルは **工程を1つずつ検証した記録**。完成時に成果物としてまとめ直すための一次記録なので、
 「何を確かめて / 何が分かって / 何が未確認か」を工程ごとに残す。
 
-工程の一覧と現状は Issue #4 の工程表を参照（#1〜#9）。
+## 工程とスクリプトの対応（2026-07-31 決定・9工程 = 9スクリプト）
+
+**1工程 = 1スクリプト**にする。工程3（島皮質ROI）は工程2から独立させる。
+
+| 工程 | スクリプト | 状態 |
+|---|---|---|
+| 1 モデルの用意 | `load_yoonsun.py` | ある |
+| 2 座標系検出 | `detect_coordinate_system.py` | ある（**ROI 部分を工程3へ切り出す**） |
+| 3 島皮質 ROI | `define_insula_roi.py` | 未作成（工程2から分離） |
+| 4 電極配置 | `place_electrodes.py` | ある |
+| 5 組織の検出・材料σ | `assign_materials.py` | ある（Issue #2 の電極スキップ欠陥あり） |
+| 6 電圧設定（BC） | `set_boundary_conditions.py` | 未作成（`setup_simulation.py` から分離） |
+| 7 グリッド → ボクセル | `setup_grid_voxels.py` | 未作成（同上） |
+| 8 RUN | `run_simulation.py` | 未作成 |
+| 9 検証 | `verify_results.py` | 未作成 |
+
+- `setup_simulation.py` は工程6+7 が混在した旧ファイル。**分割元**として残し、6・7 ができたら削除する。
+- `ti_analysis.py` は Step 2（Phase 2 / #7）の解析なので**9工程の外**。
+- 工程6以降は**ユーザーが1本ずつ自分で書いて動かす**（[[work-pace]]・判断は `Claude/Decisions/2026-07-31-reset-overbuilt-scripts.md`）。
+
+工程ごとの検証結果は以下に記録する。
 
 ---
 
