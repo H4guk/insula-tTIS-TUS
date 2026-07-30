@@ -46,9 +46,9 @@ def _candidate_roots():
     return out
 
 
-def find_logs(max_age_h=24.0, limit=12):
-    """更新が新しい *.log を新しい順に返す。"""
-    now, found, scanned = time.time(), [], 0
+def find_logs(max_age_h=None, limit=12):
+    """*.log を更新の新しい順に返す。max_age_h=None なら**年齢で切らない**（取り逃し防止）。"""
+    now, found, scanned, total = time.time(), [], 0, 0
     for root in _candidate_roots():
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames
@@ -66,13 +66,15 @@ def find_logs(max_age_h=24.0, limit=12):
                     break
                 try:    mt = os.path.getmtime(p)
                 except Exception: continue
-                if (now - mt) <= max_age_h * 3600:
+                total += 1
+                if (max_age_h is None) or ((now - mt) <= max_age_h * 3600):
                     found.append((mt, p))
             if scanned > MAX_FILES:
                 break
     uniq = {}
     for mt, p in found:
         uniq[os.path.realpath(p)] = mt
+    print('（走査: *.log %d 件ヒット / 条件通過 %d 件）' % (total, len(uniq)))
     return [(mt, p) for p, mt in sorted(uniq.items(), key=lambda kv: -kv[1])][:limit]
 
 
@@ -94,13 +96,14 @@ def show(path, tail_lines=400):
             print('  ', l.rstrip())
 
 
-def dump_logs(max_age_h=24.0, limit=12):
+def dump_logs(max_age_h=None, limit=12):
     logs = find_logs(max_age_h, limit)
     if not logs:
-        print('*.log が見つからなかった。GUI の Logger / 結果フォルダから手動で取得する。')
+        print('*.log が見つからなかった。まだ一度も Run していない（＝ログ未生成）なら正常。')
+        print('Run 後にも 0 件なら GUI の Logger / 結果フォルダから手動で取得する。')
         print('探索したルート:', _candidate_roots())
         return []
-    print('=== 直近 %.0fh の *.log: %d 件（新しい順）===' % (max_age_h, len(logs)))
+    print('=== *.log: %d 件（新しい順）===' % len(logs))
     for mt, p in logs:
         show(p)
     print('-' * 72)
