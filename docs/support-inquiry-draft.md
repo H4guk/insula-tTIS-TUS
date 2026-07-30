@@ -43,6 +43,32 @@ loaded through the GUI in my environment.
 RuntimeError: Unable to run simulation. Please check your simulation settings.
 ```
 
+The only log produced is `<uuid>_Voxeler.log`, which contains
+
+```
+Error: The boundary component 'Elec_T7' is not being considered in the voxeling process.
+```
+
+**No `Input.log` is produced at all**, so the solver never starts — the run stops during voxeling.
+This happens in a completely fresh session (verified before the run: no existing simulations,
+no duplicated entities, all four electrodes present, 59 head tissues in the grid box), and the
+material assignment reports 61 material settings (59 tissues + the 2 driving electrodes) with
+nothing unmapped. The HDF5 messages (`H5A__create(): attribute already exists`) also appear in this
+fresh session, so they look like a symptom rather than the cause.
+
+**Observation that may be the key:**
+The failure mode changes depending on whether the electrode solid has a material:
+
+| electrode solid | result |
+|---|---|
+| Dirichlet BC only, no material | run completes, but `0 Dirichlet points` / `no lossy dielectrics` → all field values NaN |
+| Dirichlet BC **and** a material (σ = 1.6 S/m) | run is **rejected** with the message above |
+
+So assigning both a volume material and a Dirichlet boundary condition to the *same solid entity*
+seems to be the problem. **Should the Dirichlet boundary condition be applied to a surface / face of
+the electrode solid instead of to the solid itself?** If so, what is the correct way to obtain that
+surface from the Python API for a solid created with `CreateSolidCylinder`?
+
 **What I have already ruled out:**
 - Simulation not registered — it is added to `document.AllSimulations`.
 - Missing conductivities — every tissue material has a non-zero conductivity (verified by reading
