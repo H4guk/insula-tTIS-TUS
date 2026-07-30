@@ -36,6 +36,26 @@ WARNING: The system has no used degrees of freedom (dofs). ... no lossy dielectr
    - `used dofs > 0` かつ `Dirichlet points > 0` → 成功（NaN 解消）。次は ti_analysis.py。
    - まだ 0 → その行をそのまま記録。原因4（σ未反映）以外、順序・登録は満たしたので次はボクセル/コンポーネントの中身を個別に見る。
 
+## Run 拒否（`Unable to run simulation. Please check your simulation settings.`）2026-07-30〜
+
+全点NaN の真因（電極の材料漏れ）を直した後も **Run 自体が拒否される**事象が残った。切り分け手順:
+
+1. **ブラウザ／プロジェクトを完全リロード**（これが一番効く。前回の拒否は同名衝突が主因）。
+2. `scripts/load_yoonsun.py` → `scripts/place_electrodes.py`。
+3. `scripts/preflight_check.py` — 既存 sim・重複エンティティ・電極の有無を確認。
+   **既存 sim が 0 件・重複なし**が理想。残骸があっても続行可（次で名前が衝突しない）。
+4. `scripts/dump_logs.py` を貼る（`dump_logs()` を定義しておく。次のステップから自動で呼ばれる）。
+5. `scripts/run_step1_lf1.py` — 材料(組織59+電極2=61) → BC → グリッド → CreateVoxels → **Run** まで自動。
+   - sim 名は未使用のものを自動選択（`tTIS_LF1` が使用中なら `tTIS_LF1_r2`）＝**HDF5 属性衝突を構造的に回避**。
+   - `GridBox_head` は既存を再利用（作り直しで重複が増えるのを防ぐ）。
+   - Run の成否どちらでもログの決定的な行が自動で出る。
+6. 判定:
+   - `finite率 ≈ 100%` → ✅ 成功。ペア2（Fp1/Fp2）→ `ti_analysis.py`。
+   - ログに `not being considered` → その電極に材料σが付いていない（＝真因の再発）。
+   - ログに `HDF5 / attribute already exists` → まだ同名衝突。リロードして素の名前で1回だけ再試行。
+   - どれも無く拒否のみ → **深追いしない**。`docs/support-inquiry-draft.md` で ZMT サポート/フォーラムへ
+     `Input.log` 添付で照会する（ツール固有の検証エラーで、こちら側の推測では詰められない領域）。
+
 ## 記録して報告してほしいもの（次の切り分けに必要）
 - `verify_before_run.py` の出力（σ=0 の組織数・フォールバックで直せた数）。
 - Run 後の SolverLog "Degree of freedoms" 行（used dofs / Dirichlet points の数）。

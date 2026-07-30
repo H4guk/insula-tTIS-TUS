@@ -1,19 +1,27 @@
-"""Step 1（ペア1 T7-P7）を新規simで一気に組む統合スクリプト（全修正込み・クリーン実行用）。
+"""Step 1（ペア1 T7-P7）を新規simで一気に組んで Run まで通す統合スクリプト（クリーン実行用）。
 
 これまでの全点NaN／incompatible／run拒否は「1つのセッションに壊れたsim・古いGridBox・
-run済み状態が溜まって検証を通らなくなる」状態腐りが原因。→ **セッションをリロードして真っさらな
-状態でこれ1本を流す**のが確実（壊れたsimに後から足さない）。
+run済み状態が溜まって検証を通らなくなる」状態腐りが原因。
+→ 最善は**セッションをリロードして真っさらな状態でこれ1本を流す**こと。
+   ただしリロードを忘れても死なないよう、本スクリプトは**衝突しない名前を自動で選ぶ**（下記）。
 
 前提（この前に実行）:
   1) load_yoonsun.py       # Yoon-sun 読み込み
   2) place_electrodes.py   # Elec_T7/P7/Fp1/Fp2 生成
+  3) preflight_check.py    # セッションの汚れ確認（推奨）
   そのうえで本スクリプトを貼る。
 
 盛り込んだ修正:
-  - 材料名マッチのアンダースコア罠 → [a-z0-9]+ 分割で59組織を取りこぼさない。
+  - 材料名マッチのアンダースコア罠 → [a-z0-9]+ 分割で59組織を取りこぼさない（5bfd20b）。
   - ★全点NaNの真因 → 駆動電極 Elec_T7/P7 にも材料σを付与（無いとVoxelerが電極を除外しDirichlet=0）。
+  - MANUAL に Ear_cartilage/Ear_skin の4行（9780afd。組織59+電極2=61 が期待値）。
   - v10: 新規simは document.AllSimulations.Add(sim) で登録。
   - 順序: 材料(組織+電極)→BC→(最後に)グリッド+CreateVoxels。
+  - ★同名衝突対策（2026-07-30 の Run拒否 `HDF5: attribute already exists` 対策）:
+      * sim 名は未使用のものを自動選択（tTIS_LF1 → 使用中なら tTIS_LF1_r2, _r3 …）。
+      * GridBox_head は**既にあれば作らず再利用**（作り直しで重複エンティティが増えるのを防ぐ）。
+  - ★Run とログ確認まで自動化（往復を減らす）: Run を try/except で回し、成否どちらでも
+    dump_logs.py の dump_logs() があれば決定的なログ行を自動表示。E場の finite 率も出す。
 """
 import re
 import s4l_v1
@@ -22,6 +30,9 @@ import s4l_v1.document as document
 import s4l_v1.simulation.emlf as emlf
 import s4l_v1.materials as materials
 import XCoreModeling as xc
+
+RUN = True          # False にすると組み上げまでで止まる（Run は手動）
+BASE_NAME = 'tTIS_LF1'
 
 
 def V(p): return model.Vec3(*map(float, p))
@@ -89,8 +100,22 @@ for e in model.AllEntities():
             continue
         head.add(n)
 
-# 新規 sim + 登録
-sim = emlf.ElectroQsOhmicSimulation(); sim.Name = 'tTIS_LF1'
+# ---- 新規 sim（★未使用の名前を選ぶ。既存 tTIS_LF1 と結果ファイルの衝突を避ける）----
+used = set()
+try:
+    used = {s.Name for s in document.AllSimulations}
+except Exception:
+    pass
+sim_name = BASE_NAME
+k = 1
+while sim_name in used:
+    k += 1
+    sim_name = '%s_r%d' % (BASE_NAME, k)
+if sim_name != BASE_NAME:
+    print('※ %s は使用中 → 衝突を避けて %s で作る（リロードすれば素の名前に戻る）'
+          % (BASE_NAME, sim_name))
+
+sim = emlf.ElectroQsOhmicSimulation(); sim.Name = sim_name
 sim.SetupSettings.Frequency = 2000.0
 document.AllSimulations.Add(sim)
 
@@ -114,6 +139,7 @@ for nm in ('Elec_T7', 'Elec_P7'):
 sim.UpdateAllMaterials()
 print('材料数:', len(created), '(組織59 + 電極2 = 61 期待) / 未マップ:', miss)
 
+
 # BC（+1V / 0V）
 def add_bc(elec, v, name):
     b = sim.AddBoundarySettings(get_entity(elec)); b.Name = name
@@ -124,13 +150,57 @@ def add_bc(elec, v, name):
 add_bc('Elec_T7', 1.0, 'BC_T7_pos')
 add_bc('Elec_P7', 0.0, 'BC_P7_gnd')
 
-# グリッド → 最後にボクセル化
+# ---- グリッド → 最後にボクセル化 ----
 ggs = sim.GlobalGridSettings; p = ggs.DiscretizationModeProp
 p.set(p.findValue('Manual')); ggs.MaxStep = [5.0, 5.0, 5.0]
-gb = xc.CreateSolidBlock(V([4, 162, 1450]), V([202, 352, 1665])); gb.Name = 'GridBox_head'
+gb = get_entity('GridBox_head')            # ★既にあれば作らない（重複エンティティ防止）
+if gb is None:
+    gb = xc.CreateSolidBlock(V([4, 162, 1450]), V([202, 352, 1665]))
+    gb.Name = 'GridBox_head'
+    print('GridBox_head を新規作成')
+else:
+    print('GridBox_head は既存のものを再利用')
 mg = sim.AddManualGridSettings(gb); mg.Name = 'Grid_head_1mm'; mg.MaxStep = [1.0, 1.0, 1.0]
 sim.UpdateGrid(); sim.CreateVoxels()
 document.Save()
-print('組み上げ完了。次:')
-print("  sim.RunSimulation(wait=True)")
-print("  → Voxeler.log に Elec エラーが無いこと & finite率≈100% を確認")
+print('組み上げ完了:', sim.Name)
+
+# ---- Run（成否どちらでも証拠ログを出す）----
+if RUN:
+    ok = False
+    try:
+        sim.RunSimulation(wait=True)
+        ok = True
+        print('Run 完了。HasResults:', sim.HasResults())
+    except Exception as e:
+        print('★Run 拒否/失敗:', type(e).__name__, e)
+        print('  → 下のログで "HDF5 / attribute already exists"（同名衝突）か')
+        print('    "not being considered"（電極の材料漏れ）か切り分ける。')
+
+    if ok:
+        try:
+            import numpy as np
+            res = sim.Results(); res.UpdateAll()
+            of = res['Overall Field']; of.Update()
+            ef = of['EM E(x,y,z,f0)']; ef.Update()
+            arr = ef.Data.Field(0)
+            fin = np.isfinite(np.abs(arr)).all(axis=1)
+            print('E場 shape:', arr.shape, '/ finite率: %.1f%%' % (100.0 * fin.mean()))
+            if fin.mean() > 0.99:
+                mag = np.sqrt(np.sum(np.abs(arr) ** 2, axis=1))
+                print('|E| max: %.4g V/m  → ✅ Step1 ペア1 成功。次はペア2(Fp1/Fp2)。' % np.nanmax(mag))
+            else:
+                print('✗ NaN が残っている → Voxeler.log の "not being considered" を確認')
+        except Exception as e:
+            print('E場の取得に失敗:', type(e).__name__, e)
+
+    d = globals().get('dump_logs')
+    if d:
+        d()
+    else:
+        print('※ ログを見るには dump_logs.py の中身を貼って実行する')
+
+print('次にやること:')
+print('  成功  → ペア2: 同じ手順を Elec_Fp1(+1V)/Elec_Fp2(0V) で tTIS_LF2 として組む → ti_analysis.py')
+print('  拒否  → リロードして素の名前で1回だけ再試行 → それでも拒否なら')
+print('          docs/support-inquiry-draft.md で ZMT サポート/フォーラムへ Input.log 添付で照会')

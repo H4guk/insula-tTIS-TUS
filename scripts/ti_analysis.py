@@ -76,13 +76,17 @@ def roi_stats(ti_flat, mask, vol):
 
 
 # ===== 実行例（本番・ペア1=2000Hz / ペア2=2010Hz を Run 済みの前提）=====
+# ⚠️ sim 名は run_step1_lf1.py が**同名衝突を避けて自動採番**する（tTIS_LF1 が使用中なら tTIS_LF1_r2）。
+#    実行時にコンソールへ出た実際の名前（sim.Name）を下の NAME1 / NAME2 に入れること。
+NAME1, NAME2 = 'tTIS_LF1', 'tTIS_LF2'
+
 if __name__ == '__main__':
-    arr1 = get_E('tTIS_LF1')               # ペア1（T7–P7）
-    arr2 = get_E('tTIS_LF2')               # ペア2（Fp1–Fp2）※別シミュとして Run 済み
+    arr1 = get_E(NAME1)                    # ペア1（T7–P7）
+    arr2 = get_E(NAME2)                    # ペア2（Fp1–Fp2）※別シミュとして Run 済み
     ti = ti_envelope(arr1, arr2)
 
     # E 場データ本体（グリッド幾何の取得用）
-    ef = document.AllSimulations['tTIS_LF1'].Results()['Overall Field']['EM E(x,y,z,f0)']
+    ef = document.AllSimulations[NAME1].Results()['Overall Field']['EM E(x,y,z,f0)']
     ef.Update(); fd = ef.Data
 
     roi = sphere_mask(fd, (99.1, 295.0, 1562.2), 10.0)    # 左島皮質 ROI（configs/parameters.py）
