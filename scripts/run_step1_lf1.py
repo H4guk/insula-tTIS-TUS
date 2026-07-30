@@ -33,6 +33,8 @@ import XCoreModeling as xc
 
 RUN = True          # False にすると組み上げまでで止まる（Run は手動）
 BASE_NAME = 'tTIS_LF1'
+BC_ON_FACE = True   # ★Dirichlet BC を電極ソリッドではなく「外側の面」に付ける（下記）
+HEAD_CENTER = (96.5, 258.9, 1566.8)   # 球フィットの中心O（面の内外判定に使う）
 
 
 def V(p): return model.Vec3(*map(float, p))
@@ -140,13 +142,56 @@ sim.UpdateAllMaterials()
 print('材料数:', len(created), '(組織59 + 電極2 = 61 期待) / 未マップ:', miss)
 
 
-# BC（+1V / 0V）
+# ---- BC（+1V / 0V）----
+# ★2026-07-30 の実測: 電極ソリッド(Body)に材料σと Dirichlet BC を**両方**付けると
+#   Voxeler.log に `The boundary component 'Elec_T7' is not being considered in the voxeling process.`
+#   が出て Run が拒否される（Input.log も生成されない＝ソルバー起動前で停止）。
+#   同じエンティティが材料と BC の両方に登録されるため Input.h5 に同じ属性を二度書こうとして
+#   `H5A__create(): attribute already exists` も出る。
+#   → BC は**別エンティティ＝電極の外側の面**に付ける（BC_ON_FACE=True）。
+#      面取得は xc.GetFaces / xc.IsPlanarFace（実機で存在を確認済み・2026-07-30）。
+def outer_face(elec_name):
+    """電極ソリッドの平面のうち、頭の中心から最も遠い面（＝外側の円板）を返す。"""
+    ent = get_entity(elec_name)
+    faces = list(xc.GetFaces(ent))
+    best, best_d = None, -1.0
+    for f in faces:
+        try:
+            if not xc.IsPlanarFace(f):        # 円筒の側面は除く
+                continue
+        except Exception:
+            pass                              # 判定できない場合は候補に残す
+        bb = xc.GetBoundingBox([f])
+        if not bb:
+            continue
+        lo, hi = xyz(bb[0]), xyz(bb[1])
+        c = [(lo[i] + hi[i]) / 2.0 for i in range(3)]
+        d = sum((c[i] - HEAD_CENTER[i]) ** 2 for i in range(3))
+        if d > best_d:
+            best, best_d = f, d
+    return best, len(faces)
+
+
 def add_bc(elec, v, name):
-    b = sim.AddBoundarySettings(get_entity(elec)); b.Name = name
+    target = get_entity(elec)
+    if BC_ON_FACE:
+        try:
+            f, nf = outer_face(elec)
+            if f is not None:
+                target = f
+                try:    f.Name = elec + '_face_out'
+                except Exception: pass
+                print('  %s: 面BC を使用（面数 %d / 外側の面を選択）' % (elec, nf))
+            else:
+                print('  %s: 平面が見つからず → ソリッドBCにフォールバック' % elec)
+        except Exception as e:
+            print('  %s: 面の取得に失敗(%s) → ソリッドBCにフォールバック' % (elec, type(e).__name__))
+    b = sim.AddBoundarySettings(target); b.Name = name
     b.BoundaryType = emlf.EnumBoundaryType.kDirichlet     # Deprecated 警告は無害
     b.DirichletValue = v
 
 
+print('BC を設定:')
 add_bc('Elec_T7', 1.0, 'BC_T7_pos')
 add_bc('Elec_P7', 0.0, 'BC_P7_gnd')
 
