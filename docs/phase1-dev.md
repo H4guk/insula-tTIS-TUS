@@ -57,7 +57,25 @@ for fn in cands:
 **未確認として残すこと**:
 - ViP メッシュが水密かどうか（`IsClosedSolidBody` では判定できていない）。
   ただし上記2により、これが工程7の主因である可能性は低い。
-- `ConvertToSolid` は存在する。将来 ViP を Body 化する必要が出たら、この API のオプションを調べる。
+
+**★追記（2026-07-31）: ViP は「ライセンス保護されたパート」で変換できない**
+`xc.ConvertToSolid(skin)` を呼んだ際、Logger に
+
+```
+[ERROR] [XCore.CLog] Cannot convert licensed part
+```
+
+が出た（Python 側は `RuntimeError`）。＝ **ViP（Yoon-sun）のジオメトリは .lite ではライセンス保護されており、
+ソリッドへの変換が許可されていない**。→ **「ViP を Body 化してから焼く」という回避ルートは使えない**。
+ただし自作ソリッド（`CreateSolidBlock` の箱）も焼けていないので、**変換不可そのものが工程7の原因ではない**。
+
+**無害と判定したエラー（起動時ノイズ）**:
+```
+Failed to define static enum for 'ScaleType' @ RecruitmentEvaluator          （ニューロン解析）
+Failed to define static enum for 'MagneticProps.MaterialModel' @ _emfdtd_impl（EM FDTD・高周波）
+```
+どちらも Python API 初期化時の enum 登録失敗。本プロジェクトは **Electro Ohmic Quasi-Static（低周波）**
+のみを使い、ニューロン解析・FDTD は触らないため無関係。ボクセル化にも影響しない。
 
 **参照**: `Claude/Knowledge/sim4life-yoonsun-implementation.md` / `Claude/DailyLogs/2026-07-31.md`
 
