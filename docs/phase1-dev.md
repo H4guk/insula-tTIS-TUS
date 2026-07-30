@@ -12,19 +12,20 @@
 
 | 工程 | スクリプト | 状態 |
 |---|---|---|
-| 1 モデルの用意 | `load_yoonsun.py` | ある |
-| 2 座標系検出 | `detect_coordinate_system.py` | ある（**ROI 部分を工程3へ切り出す**） |
-| 3 島皮質 ROI | `define_insula_roi.py` | 未作成（工程2から分離） |
-| 4 電極配置 | `place_electrodes.py` | ある |
-| 5 組織の検出・材料σ | `assign_materials.py` | ある（Issue #2 の電極スキップ欠陥あり） |
-| 6 電圧設定（BC） | `set_boundary_conditions.py` | 未作成（`setup_simulation.py` から分離） |
-| 7 グリッド → ボクセル | `setup_grid_voxels.py` | 未作成（同上） |
-| 8 RUN | `run_simulation.py` | 未作成 |
-| 9 検証 | `verify_results.py` | 未作成 |
+| 1 モデルの用意 | `load_yoonsun.py` | ある・検証済 |
+| 2 座標系検出 | `detect_coordinate_system.py` | ある・検証済（ROI 算出は工程3へ分離済み） |
+| 3 島皮質 ROI | `define_insula_roi.py` | **ある**（2026-07-31 新設・再計算＋妥当性検証） |
+| 4 電極配置 | `place_electrodes.py` | ある・検証済 |
+| 5 組織の検出・材料σ | （未作成） | 旧 `assign_materials.py` は電極スキップ（#2）・σ値未検証のため削除 |
+| 6 電圧設定（BC） | （未作成） | 面BC が正解と判明済み（`error-log.md` 2026-07-30） |
+| 7 グリッド → ボクセル | （未作成） | **ブロッカー**（ボクセルシーンが空） |
+| 8 RUN | （未作成） | — |
+| 9 検証 | （未作成） | — |
 
-- `setup_simulation.py` は工程6+7 が混在した旧ファイル。**分割元**として残し、6・7 ができたら削除する。
 - `ti_analysis.py` は Step 2（Phase 2 / #7）の解析なので**9工程の外**。
-- 工程6以降は**ユーザーが1本ずつ自分で書いて動かす**（[[work-pace]]・判断は `Claude/Decisions/2026-07-31-reset-overbuilt-scripts.md`）。
+- 工程5〜9 は**検証しながら1本ずつ作る**（判断の記録＝Obsidian `Claude/Decisions/2026-07-31-reset-overbuilt-scripts.md`）。
+- 削除したスクリプト（診断4本・統合・ゲート・`setup_simulation.py`・`assign_materials.py`）は
+  git 履歴 `3ac4756`〜`440b6e6` から復元可能。得られた知見は `error-log.md` と本ファイルに残してある。
 
 工程ごとの検証結果は以下に記録する。
 
