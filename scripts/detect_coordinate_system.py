@@ -1,4 +1,4 @@
-"""② 座標系・ランドマーク・島皮質 ROI の検出（Sim4Life.lite Python コンソール）。
+"""工程2 座標系・ランドマークの検出（Sim4Life.lite Python コンソール）。
 
 座標ラベル(X/Y/Z)を鵜呑みにせず、寸法・組織名・組織間の位置関係という
 "座標系に依らない事実" から軸の意味を逆算する（別モデルでも通用させるため）。
@@ -7,7 +7,9 @@
   X=前後(+X=前) / Y=左右(+Y=左・正中≈260.5) / Z=上下(頭頂1661)
   ★ +Y=左 の取り違え厳禁（電極は左・ROI は右で全実験が無意味になる）
   AC-PC 傾き 3.18° → 回転補正不要
-  左島皮質 ROI: 中心 (99.1, 295.0, 1562.2) / 半径 10mm の球
+
+※ 島皮質 ROI の算出・検証は **工程3 `define_insula_roi.py`** に分離した（2026-07-31）。
+   本ファイルは「座標系とランドマークを確定させる」ところまでを担当する。
 
 出典ノート: Claude/Knowledge/sim4life-yoonsun-implementation.md §3
 """
@@ -70,7 +72,7 @@ y0 = min(h[0][1] for h in head); y1 = max(h[1][1] for h in head)
 z0 = min(h[0][2] for h in head); z1 = max(h[1][2] for h in head)
 print('頭部 X %.1f→%.1f / Y %.1f→%.1f / Z %.1f→%.1f' % (x0, x1, y0, y1, z0, z1))
 
-# ⑥ 島皮質 ROI（MNI±38 を脳幅で補正）
-brain_w = gm[1][1] - gm[0][1]; off = 38.0 * brain_w / 140.0
-print('左島皮質 (%.1f, %.1f, %.1f) r=10mm ★本番' % (ac[2][0], mid_y + off, ac[2][2]))
-print('右島皮質 (%.1f, %.1f, %.1f) r=10mm'        % (ac[2][0], mid_y - off, ac[2][2]))
+# ⑥ ここで確定した値を工程3へ渡す（ROI の算出は define_insula_roi.py が担当）
+print('\n→ 工程3 (define_insula_roi.py) に渡す値:')
+print('   正中 Y = %.1f / AC = (%.1f, %.1f, %.1f) / 脳幅 = %.1f mm'
+      % (mid_y, ac[2][0], ac[2][1], ac[2][2], gm[1][1] - gm[0][1]))

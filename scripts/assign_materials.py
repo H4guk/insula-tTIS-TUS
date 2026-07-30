@@ -1,4 +1,4 @@
-"""④ 頭部組織へ導電率 σ を割り当て（IT'IS LF DB 自動リンク・Sim4Life.lite）。
+"""工程5 頭部組織へ導電率 σ を割り当て（IT'IS LF DB 自動リンク・Sim4Life.lite）。
 
 lec3 の「σ=0 で no dofs」の罠が Yoon-sun では 326 組織分あるが、
 IT'IS の低周波(LF)物性 DB に自動リンクすれば一括で片付く（手打ち不要）。

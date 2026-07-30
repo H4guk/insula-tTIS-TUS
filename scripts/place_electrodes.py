@@ -1,4 +1,4 @@
-"""③ 電極を座標計算して自動配置（Montage I / 10-20 法・Sim4Life.lite Python コンソール）。
+"""工程4 電極を座標計算して自動配置（Montage I / 10-20 法・Sim4Life.lite Python コンソール）。
 
 lec6 の教訓「手動の電極配置は精度・再現性が悪い」への解。すべて Python で座標計算 → 生成。
 

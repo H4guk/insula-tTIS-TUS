@@ -1,4 +1,4 @@
-"""⑥ E 場抽出 → TI 包絡線 → 島皮質 ROI 定量（Sim4Life.lite Python コンソール）。
+"""Step 2（Phase 2 / GH #7）E 場抽出 → TI 包絡線 → 島皮質 ROI 定量（Sim4Life.lite Python コンソール）。
 
 前半（get_E / TI 計算 / reshape / 深部代理点）は lec8 で SAM head 上で検証済みの実コード。
 後半（本番 ROI: mm 球 ROI での体積重み平均・選択性）は、tTIS-field-simulation.md に
@@ -76,8 +76,8 @@ def roi_stats(ti_flat, mask, vol):
 
 
 # ===== 実行例（本番・ペア1=2000Hz / ペア2=2010Hz を Run 済みの前提）=====
-# ⚠️ sim 名は run_step1_lf1.py が**同名衝突を避けて自動採番**する（tTIS_LF1 が使用中なら tTIS_LF1_r2）。
-#    実行時にコンソールへ出た実際の名前（sim.Name）を下の NAME1 / NAME2 に入れること。
+# ⚠️ 工程8（`run_simulation.py`）で Run した sim の**実際の名前**を下の NAME1 / NAME2 に入れること
+#    （同名の sim が既にあると結果ファイルが衝突するので、名前を変えて作る場合がある）。
 NAME1, NAME2 = 'tTIS_LF1', 'tTIS_LF2'
 
 if __name__ == '__main__':

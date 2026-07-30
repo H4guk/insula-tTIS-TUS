@@ -1,4 +1,4 @@
-"""⑤ ±電位 BC とグリッドを設定（Sim4Life.lite / Electro QS）。
+"""（旧・分割元）工程6 ±電位 BC ＋ 工程7 グリッドを設定（Sim4Life.lite / Electro QS）。
 
 1 シミュ = 1 電極対（TI は 2 つの近接周波数のペアを重ねる）。
 まず tTIS_LF1 = ペア1（T7 +1V / P7 0V）。ペア2（Fp1–Fp2）は別シミュ tTIS_LF2 に同手順で。

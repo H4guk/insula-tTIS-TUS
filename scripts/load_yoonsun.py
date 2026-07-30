@@ -1,4 +1,4 @@
-"""① Yoon-sun 頭部モデルの読み込み（Sim4Life.lite Python コンソールで実行）。
+"""工程1 Yoon-sun 頭部モデルの読み込み（Sim4Life.lite Python コンソールで実行）。
 
 Lite の GUI からは読み込めない（ボタン無反応）ため、Python 経由で取得する:
   data.GetAvailableDownloads() → data.DownloadModel() → XCoreModeling.Import()
