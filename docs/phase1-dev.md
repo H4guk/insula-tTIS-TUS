@@ -196,3 +196,65 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
 - 電極モデルの簡略化（我々＝σ 1.6 の円板1層 / Inoue 2025＝導電ゴム σ0.1 厚1mm ＋ 生理食塩水スポンジ σ1.6 厚5mm の 20mm角）。
   dev では簡略化のままで良いが、**レポートに限界として明記**する必要がある → Phase 2（#7）のチェックリスト。
 - 目視確認は未実施（3Dビューのピボット問題が未解決）。数値では確認できているので dev では問題なし。
+
+
+---
+
+## 工程7 突破のための手順（ブロッカー）
+
+現象・切り分け・最小再現ケースは `error-log.md`（2026-07-31）にまとめてある。ここでは手順だけ書く。
+
+### 鉄則（NaN を避ける順序）
+**材料σ（組織＋電極）→ 電極BC（面に付ける）→（全部終えてから最後に）`CreateVoxels` → Run → ログ確認。**
+ボクセル化は割り当てのスナップショットなので、割り当て後に必ず作り直す。各段のあと `document.Save()`。
+
+### 手順
+1. ブラウザ／プロジェクトを**完全リロード**（壊れ sim・古い GridBox・旧結果を捨てる）。
+2. 工程1 → 工程2 → 工程3 → 工程4 を順に実行（`load_yoonsun.py` → `detect_coordinate_system.py`
+   → `define_insula_roi.py` → `place_electrodes.py`）。
+3. 工程5（材料σ）: 頭部59組織 ＋ **駆動電極にも σ=1.6**。割り当て後に **期待値（61）と実数を突き合わせる**。
+   σ の値は **`sim.AllSettings`** を回して `MaterialSettings` から読む（`AllComponents` は σ を持たない）。
+4. 工程6（BC）: Dirichlet を**電極の外側の面**に付ける（`xc.GetFaces` → `IsPlanarFace` →
+   頭の中心 (96.5, 258.9, 1566.8) から最も遠い平面）。ソリッドに直接付けると Run が拒否される。
+5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 1mm → `UpdateGrid()` → `CreateVoxels()`。
+   **`Voxeler.log` の `Voxel Scene Memory Consumption` が MB 級になっているか**を必ず確認する。
+6. 工程8（RUN）→ 工程9（検証）: `Input.log` の `Degree of freedoms` 行で
+   **`unknowns > 0` かつ `Dirichlet points > 0`**、E 場の **finite 率 ≈ 100%** を確認。
+
+### ログの取り方
+結果ディレクトリは **`os.path.dirname(sim.GetOutputFileName())`** で取れる。
+その中の `*_Voxeler.log` / `*_Input.log` の最新を読む。見るべき行:
+
+| ログ | 見る行 | 正常な状態 |
+|---|---|---|
+| `Voxeler.log` | `Voxel Scene Memory Consumption` | **MB 級**（0.001 kB は空＝異常） |
+| `Voxeler.log` | `... is not being considered in the voxeling process` | **出ないこと** |
+| `Input.log` | `Degree of freedoms: ... N unknowns, M Dirichlet points` | **N > 0 かつ M > 0** |
+
+### それでも通らない場合: ZMT サポート/フォーラムへの照会
+
+送り先: `s4l-support@zmt.swiss` / https://forum.zmt.swiss/
+添付: `Input.log`・`Voxeler.log`・最小再現コード・Explorer のツリーのスクリーンショット。
+
+送る前のチェック:
+- [ ] リロード済みの素のセッションで再現することを確認した
+- [ ] 最小再現ケース（ViP・電極・BC を使わない箱1個）で再現することを確認した
+- [ ] `Voxel Scene Memory Consumption` の実測値を本文に書いた
+
+照会文（英語・骨子）:
+
+> I am using Sim4Life.lite (free student licence) and building an Electro Ohmic Quasi-Static
+> simulation from the Python console. `CreateVoxels()` completes ("Voxeling succeeded") but the
+> voxel scene is essentially empty (`Voxel Scene Memory Consumption: 0.001196 kB`), and the
+> voxeler reports `Error: The material component '<name>' is not being considered in the voxeling
+> process.` The solver then reports `0 unknowns, 0 Dirichlet points` and all field values are NaN.
+>
+> This reproduces with a **minimal case that uses neither the anatomical model nor any boundary
+> condition**: a single solid block created with `CreateSolidBlock`, one `AddMaterialSettings` with
+> `ElectricProps.Conductivity = 0.5`, a manual global grid, then `CreateVoxels()`.
+> It also reproduces in a freshly reloaded session, so it is not leftover session state.
+>
+> Which registration step makes an entity "considered" by the voxeler? Is there a step, in addition
+> to `AddMaterialSettings`, that adds the entity to the simulation's model / solid region
+> (the solver warning says "Check your model and solid region settings")?
+> `AssignEntities` appears to have been removed in v10 — what replaces it?
