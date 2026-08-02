@@ -18,7 +18,7 @@
 | 4 電極配置 | `place_electrodes.py` | ある・検証済 |
 | 5 組織の検出・材料σ | （未作成） | 旧 `assign_materials.py` は電極スキップ（#2）・σ値未検証のため削除 |
 | 6 電圧設定（BC） | （未作成） | 面BC が正解と判明済み（`error-log.md` 2026-07-30） |
-| 7 グリッド → ボクセル | （未作成） | **ブロッカー**（ボクセルシーンが空） |
+| 7 グリッド → ボクセル | （未作成） | ~~ブロッカー~~ **2026-08-03 原因解決**（Voxeler/Grid 設定への登録漏れ。工程5に手順を追記済み） |
 | 8 RUN | （未作成） | — |
 | 9 検証 | （未作成） | — |
 
@@ -215,6 +215,19 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
    → `define_insula_roi.py` → `place_electrodes.py`）。
 3. 工程5（材料σ）: 頭部59組織 ＋ **駆動電極にも σ=1.6**。割り当て後に **期待値（61）と実数を突き合わせる**。
    σ の値は **`sim.AllSettings`** を回して `MaterialSettings` から読む（`AllComponents` は σ を持たない）。
+   ★**2026-08-03 追加・最重要**: σ を付けただけでは **voxeler の対象にならない**。同じエンティティを
+   **Voxeler 設定と Grid 設定にも登録する**こと（これが 7/22〜8/3 のブロッカーの根本原因だった）:
+
+   ```python
+   vox = [s for s in sim.AllSettings if type(s).__name__ == 'AutomaticVoxelerSettings'][0]
+   grd = [s for s in sim.AllSettings if type(s).__name__ == 'AutomaticGridSettings'][0]
+   for e in entities:
+       sim.Add(vox, [e])
+       sim.Add(grd, [e])
+   ```
+
+   検証は `component.Settings` のキーが **3種類**（Material / Grid / Voxeler）になること。
+   詳細レシピ → Obsidian `Claude/Knowledge/sim4life-material-assignment.md`「★★最重要」節。
 4. 工程6（BC）: Dirichlet を**電極の外側の面**に付ける（`xc.GetFaces` → `IsPlanarFace` →
    頭の中心 (96.5, 258.9, 1566.8) から最も遠い平面）。ソリッドに直接付けると Run が拒否される。
 5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 1mm → `UpdateGrid()` → `CreateVoxels()`。
@@ -228,7 +241,7 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
 
 | ログ | 見る行 | 正常な状態 |
 |---|---|---|
-| `Voxeler.log` | `Voxel Scene Memory Consumption` | **MB 級**（0.001 kB は空＝異常） |
+| `Voxeler.log` | `Voxel Scene Memory Consumption` | **kB 級で正常**（★2026-08-03 訂正: 旧記述「MB 級」は誤り。動作実績のある `Lec8-practice`（251,378 セル）の実測が **0.132734 kB / 0.229 s**。判定は絶対値でなく**動く sim との相対比較**で行う。失敗例＝421,875 セルで 0.003414 kB / 0.0128 s） |
 | `Voxeler.log` | `... is not being considered in the voxeling process` | **出ないこと** |
 | `Input.log` | `Degree of freedoms: ... N unknowns, M Dirichlet points` | **N > 0 かつ M > 0** |
 
