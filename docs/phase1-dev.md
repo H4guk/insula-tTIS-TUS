@@ -17,7 +17,7 @@
 | 3 島皮質 ROI | `define_insula_roi.py` | **ある**（2026-07-31 新設・再計算＋妥当性検証） |
 | 4 電極配置 | `place_electrodes.py` | ある・検証済 |
 | 5 組織の検出・材料σ | `assign_materials.py` | **ある・実機 PASS**（2026-08-03 新規作成。σ63件＋Voxeler/Grid 登録63件＋前後ゲート。旧版は電極スキップ（#2）・σ値未検証のため 7/31 に削除済みで、内容は別物） |
-| 6 電圧設定（BC） | （未作成） | 面BC が正解と判明済み（`error-log.md` 2026-07-30） |
+| 6 電圧設定（BC） | `setup_boundary.py` | **ある**（2026-08-03 新規作成。**ソリッドBC**。7/30 の「面BC が正解」は撤回＝下記） |
 | 7 グリッド → ボクセル | （未作成） | ~~ブロッカー~~ **2026-08-03 原因解決**（Voxeler/Grid 設定への登録漏れ。工程5に手順を追記済み） |
 | 8 RUN | （未作成） | — |
 | 9 検証 | （未作成） | — |
@@ -241,8 +241,16 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
    `AutomaticGridSettings` は同じ型名で取得でき、`sim.Add` も通る（`VOXTEST_GUI` の `PYBOX2` で実測）。
    → **sim クラスは Ohmic のままでよい**。
    詳細レシピ → Obsidian `Claude/Knowledge/sim4life-material-assignment.md`「★★最重要」節。
-4. 工程6（BC）: Dirichlet を**電極の外側の面**に付ける（`xc.GetFaces` → `IsPlanarFace` →
-   頭の中心 (96.5, 258.9, 1566.8) から最も遠い平面）。ソリッドに直接付けると Run が拒否される。
+4. 工程6（BC）: Dirichlet を**電極ソリッド本体**に付ける（`scripts/setup_boundary.py`）。
+   ★2026-08-03 訂正: 旧記述「外側の面に付ける／ソリッドに直接付けると Run が拒否される」は**撤回**。
+   - **面BC は使えない**: `sim.AddBoundarySettings(face)` は恒久的な紐付けを作らず、**常に最後の1つだけ**が
+     単一の無名コンポーネントに載る。それ以前の BC は設定だけ残って孤児になり、電極対を駆動できない。
+     設定は `AllSettings` から読めるため「付いているのに効いていない」罠になる（実測: BC を2つ付けても
+     コンポーネントは1つしか増えず、3つ目を足すとキーが置き換わった）。
+   - **ソリッドBC は正しく紐付く**: `Elec_T7` / `Elec_P7` とも
+     `['Automatic', 'Automatic Voxeler Settings', 'BC_*', 'Saline_Elec_*']` の4キーになり、材料σと併存する。
+   - 「ソリッドだと Run 拒否」の観測はボクセル化が壊れていた期間のもので、拒否はボクセル化の段で起きていた。
+     根本原因（Voxeler/Grid 登録漏れ）修正後は設定段階で問題は出ない。**Run で最終確認する**。
 5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 1mm → `UpdateGrid()` → `CreateVoxels()`。
    **`Voxeler.log` の `Voxel Scene Memory Consumption` が MB 級になっているか**を必ず確認する。
 6. 工程8（RUN）→ 工程9（検証）: `Input.log` の `Degree of freedoms` 行で
