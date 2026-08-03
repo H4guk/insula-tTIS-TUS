@@ -16,7 +16,7 @@
 | 2 座標系検出 | `detect_coordinate_system.py` | ある・検証済（ROI 算出は工程3へ分離済み） |
 | 3 島皮質 ROI | `define_insula_roi.py` | **ある**（2026-07-31 新設・再計算＋妥当性検証） |
 | 4 電極配置 | `place_electrodes.py` | ある・検証済 |
-| 5 組織の検出・材料σ | （未作成） | 旧 `assign_materials.py` は電極スキップ（#2）・σ値未検証のため削除 |
+| 5 組織の検出・材料σ | `assign_materials.py` | **ある・実機 PASS**（2026-08-03 新規作成。σ63件＋Voxeler/Grid 登録63件＋前後ゲート。旧版は電極スキップ（#2）・σ値未検証のため 7/31 に削除済みで、内容は別物） |
 | 6 電圧設定（BC） | （未作成） | 面BC が正解と判明済み（`error-log.md` 2026-07-30） |
 | 7 グリッド → ボクセル | （未作成） | ~~ブロッカー~~ **2026-08-03 原因解決**（Voxeler/Grid 設定への登録漏れ。工程5に手順を追記済み） |
 | 8 RUN | （未作成） | — |
@@ -213,7 +213,11 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
 1. ブラウザ／プロジェクトを**完全リロード**（壊れ sim・古い GridBox・旧結果を捨てる）。
 2. 工程1 → 工程2 → 工程3 → 工程4 を順に実行（`load_yoonsun.py` → `detect_coordinate_system.py`
    → `define_insula_roi.py` → `place_electrodes.py`）。
-3. 工程5（材料σ）: 頭部59組織 ＋ **駆動電極にも σ=1.6**。割り当て後に **期待値（61）と実数を突き合わせる**。
+3. 工程5（材料σ）: 頭部59組織 ＋ **電極4枚すべてに σ=1.6**。割り当て後に **期待値（63）と実数を突き合わせる**。
+   ★2026-08-03 訂正: 旧記述は「駆動電極（2枚）＝期待値 61」だったが、**非駆動ペアにも σ を付けて 63 に統一**する。
+   理由は、TI 包絡が LF1（T7/P7・2000Hz）と LF2（Fp1/Fp2・2010Hz）の E 場を同一点で合成するため、
+   両 sim のエンティティ集合を揃えないと自動グリッドの刻みがずれて格子が一致しなくなるおそれがあるから。
+   実験でも4枚とも頭部に貼られている状態が実態に近い。
    σ の値は **`sim.AllSettings`** を回して `MaterialSettings` から読む（`AllComponents` は σ を持たない）。
    ★**2026-08-03 追加・最重要**: σ を付けただけでは **voxeler の対象にならない**。同じエンティティを
    **Voxeler 設定と Grid 設定にも登録する**こと（これが 7/22〜8/3 のブロッカーの根本原因だった）:
@@ -226,7 +230,16 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
        sim.Add(grd, [e])
    ```
 
-   検証は `component.Settings` のキーが **3種類**（Material / Grid / Voxeler）になること。
+   検証は `component.Settings` が **`Automatic` と `Automatic Voxeler Settings` を両方含む**こと。
+   ★2026-08-03 罠: **`component.Name` はエンティティ名と一致しない**。ViP 由来は `Skin  (Yoon-sun v3.1 Static)`、
+   `Skull_cortical  (Yoon-sun v3.1 Static/Bones)` のように `  (モデル名/グループ名)` の接尾辞が付く
+   （Python 製の電極 `Elec_T7` には付かない）。完全一致で照合すると組織59個が全部落ちて `4/63` と誤判定する。
+   照合は `c.Name.split('  (')[0].strip()` で接尾辞を落とすこと。
+   ★2026-08-03 訂正: 材料のキー名は **`ms.Name` に入れた文字列がそのまま入る**（本番は `e.MaterialName`＝組織名）。
+   旧記述の「キーが `Material Settings`」は誤りで、キー名の完全一致で検証すると全件 NG と誤判定する。
+   ★2026-08-03 確認: 本番の `emlf.ElectroQsOhmicSimulation()` でも `AutomaticVoxelerSettings` /
+   `AutomaticGridSettings` は同じ型名で取得でき、`sim.Add` も通る（`VOXTEST_GUI` の `PYBOX2` で実測）。
+   → **sim クラスは Ohmic のままでよい**。
    詳細レシピ → Obsidian `Claude/Knowledge/sim4life-material-assignment.md`「★★最重要」節。
 4. 工程6（BC）: Dirichlet を**電極の外側の面**に付ける（`xc.GetFaces` → `IsPlanarFace` →
    頭の中心 (96.5, 258.9, 1566.8) から最も遠い平面）。ソリッドに直接付けると Run が拒否される。
