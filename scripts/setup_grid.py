@@ -47,11 +47,9 @@ RESOLUTION = 2.0                      # 既定 0.0625mm は細かすぎる
 ELEC = ('Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 N_TISSUE = 59                         # σ を持つ頭部組織
 N_TOTAL = 63                          # Voxeler 登録数（頭部組織59 + 電極4）
-VOXEL_TIMEOUT = 900                   # 秒
-# ⚠️ Voxeler.log の `Wall Clock Time`（実測 13.6 秒）は**voxeler の内部計算時間**であって、
-#    `CreateVoxels()` を呼んでからログが書き終わるまでの実時間ではない。
-#    可視化データの書き出し（0.026 GB）等も挟まり、実測で3分以上かかることがある。
-#    2026-08-03 にこれを取り違えて 180 秒に縮め、書き終わる直前で取りこぼした。
+FIRST_WAIT = 25                       # 秒。CreateVoxels の実測は約14秒なので、まずこれだけ待って保存
+RETRY_WAIT = 30                       # 秒。出なければこの間隔で保存し直す
+SAVE_ATTEMPTS = 5                     # 最大試行回数（保存自体が重いので回数で抑える）
 
 
 def V(p):
@@ -128,48 +126,50 @@ if 'Invalid' in grid_name:
 # ★ログの更新時刻だけを待つ実装は空振りする（2026-08-03 に 600 秒待たされた。
 #   ボクセル化自体は成功していたのに mtime が期待どおり動かなかった）。
 #   実行前のスナップショットと突き合わせ、取れなくても**止まらない**ようにする。
-def snapshot(d):
-    out = {}
-    for f in glob.glob(os.path.join(d, '*Voxeler.log')):
-        try:
-            st = os.stat(f)
-            out[f] = (st.st_size, st.st_mtime)
-        except OSError:
-            pass
-    return out
+uid = os.path.basename(sim.GetOutputFileName()).split('_Output')[0]
+root = os.path.dirname(os.path.dirname(sim.GetOutputFileName()))
 
 
-out = os.path.dirname(sim.GetOutputFileName())
-before = snapshot(out)
+def find_log(since):
+    """この sim（UUID 一致）の Voxeler.log で、since 以降に書かれ、完了行を含むものを返す。"""
+    pat = os.path.join(root, '*_Results', uid + '_Voxeler.log')
+    for p in sorted(glob.glob(pat), key=os.path.getmtime, reverse=True):
+        if os.path.getmtime(p) < since:
+            continue
+        body = open(p, encoding='utf-8', errors='replace').read()
+        if 'Complete Voxel Scene' in body:
+            return p, body
+    return None, ''
+
+
 t0 = time.time()
 sim.CreateVoxels()
-print('[vox ] CreateVoxels returned (まだ焼き終わっていない)')
+print('[vox ] CreateVoxels returned')
 
+# ★★ `Voxeler.log` は**ボクセル化の完了時ではなく `document.Save()` のときに書き出される**。
+#    しかも `CreateVoxels()` は非同期で即座に戻るので、**直後に Save しても焼き終わっておらず
+#    書かれない**。待っている間に保存しなければ、いつまで待ってもファイルは現れない。
+#    2026-08-03 に 601 秒 / 900 秒 / 300 秒の空待ちを3回やった（実際の焼成は約14秒）。
+#    → **少し待ってから保存し、出なければ間隔を空けて保存を繰り返す**。
 log, txt = None, ''
-last_note = 0.0
-while time.time() - t0 < VOXEL_TIMEOUT:
-    for f, sig in sorted(snapshot(out).items(), key=lambda kv: kv[1][1]):
-        if before.get(f) == sig:
-            continue                       # 変化していない＝前回の実行のログ
-        body = open(f, encoding='utf-8', errors='replace').read()
-        if 'Complete Voxel Scene' in body:
-            log, txt = f, body
-            break
+for attempt in range(SAVE_ATTEMPTS):
+    time.sleep(FIRST_WAIT if attempt == 0 else RETRY_WAIT)
+    document.Save()
+    log, txt = find_log(t0)
+    print('[vox ] attempt %d/%d (%.0f s): %s'
+          % (attempt + 1, SAVE_ATTEMPTS, time.time() - t0,
+             os.path.basename(log) if log else 'ログはまだ出ていない'))
     if log:
         break
-    if time.time() - last_note >= 30:      # 無言で長時間待たない
-        last_note = time.time()
-        print('[vox ] waiting... %.0f s' % (time.time() - t0))
-    time.sleep(2)
 
 if log is None:                            # 諦めるが止めない。Run（工程8）が本当のゲート
-    cands = sorted(glob.glob(os.path.join(out, '*Voxeler.log')), key=os.path.getmtime)
+    cands = sorted(glob.glob(os.path.join(root, '*_Results', uid + '_Voxeler.log')),
+                   key=os.path.getmtime)
     if cands:
         txt = open(cands[-1], encoding='utf-8', errors='replace').read()
-    print('[vox ] WARNING: %d 秒待っても新しい Voxeler.log を確認できなかった。'
-          '古いログで検証を試みる（結果は参考値）' % VOXEL_TIMEOUT)
+    print('[vox ] WARNING: Voxeler.log を確認できなかった。古いログで検証を試みる（参考値）')
 else:
-    print('[vox ] done in %.1f s: %s' % (time.time() - t0, os.path.basename(log)))
+    print('[vox ] done in %.1f s' % (time.time() - t0))
 
 # ===== ⑤ 事後ゲート =====
 lines = txt.splitlines()
