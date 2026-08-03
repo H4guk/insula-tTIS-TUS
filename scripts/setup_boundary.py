@@ -83,8 +83,10 @@ for nm in ALL_ELEC:
         fail.append('%s: BC が紐付いていない' % nm)
     if nm not in driven and has_bc:
         fail.append('%s: 非駆動なのに BC が付いている' % nm)
-    if 'Automatic Voxeler Settings' not in keys or 'Automatic' not in keys:
-        fail.append('%s: Voxeler/Grid 登録が消えている' % nm)
+    # Grid（AutomaticGridSettings）には登録しない構成なので 'Automatic' キーは現れない。
+    # 見るのは Voxeler 登録だけ（2026-08-03）。
+    if 'Automatic Voxeler Settings' not in keys:
+        fail.append('%s: Voxeler 登録が消えている' % nm)
 
 vals = dict((s.Name, getattr(s, 'DirichletValue', None)) for s in sim.AllSettings
             if type(s).__name__ == 'BoundarySettings')

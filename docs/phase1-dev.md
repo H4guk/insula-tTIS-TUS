@@ -18,7 +18,7 @@
 | 4 電極配置 | `place_electrodes.py` | ある・検証済 |
 | 5 組織の検出・材料σ | `assign_materials.py` | **ある・実機 PASS**（2026-08-03 新規作成。σ63件＋Voxeler/Grid 登録63件＋前後ゲート。旧版は電極スキップ（#2）・σ値未検証のため 7/31 に削除済みで、内容は別物） |
 | 6 電圧設定（BC） | `setup_boundary.py` | **ある**（2026-08-03 新規作成。**ソリッドBC**。7/30 の「面BC が正解」は撤回＝下記） |
-| 7 グリッド → ボクセル | （未作成） | ~~ブロッカー~~ **2026-08-03 原因解決**（Voxeler/Grid 設定への登録漏れ。工程5に手順を追記済み） |
+| 7 グリッド → ボクセル | `setup_grid.py` | **ある**（2026-08-03 新規作成・実機で63件処理/61件焼成）。~~ブロッカー~~ 解決。**Grid 登録はしない**（自動グリッドが暴走して `Cell limit exceeded`）。刻みは Global 5mm ＋ 頭部 Block 2mm |
 | 8 RUN | （未作成） | — |
 | 9 検証 | （未作成） | — |
 
@@ -251,10 +251,20 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
      `['Automatic', 'Automatic Voxeler Settings', 'BC_*', 'Saline_Elec_*']` の4キーになり、材料σと併存する。
    - 「ソリッドだと Run 拒否」の観測はボクセル化が壊れていた期間のもので、拒否はボクセル化の段で起きていた。
      根本原因（Voxeler/Grid 登録漏れ）修正後は設定段階で問題は出ない。**Run で最終確認する**。
-5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 1mm → `UpdateGrid()` → `CreateVoxels()`。
-   **`Voxeler.log` の `Voxel Scene Memory Consumption` が MB 級になっているか**を必ず確認する。
+5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 2mm（dev）→ `UpdateGrid()` → `CreateVoxels()`。
+   `scripts/setup_grid.py`。**`AutomaticGridSettings` は削除する**（残すと `Cell limit exceeded`）。
+   判定は `Voxeler.log` の**エンティティ単位の `Voxels:` 件数**。
+   ★2026-08-03 訂正: 「`Voxel Scene Memory Consumption` が MB 級」は**誤り**（幾何の複雑さの指標）。
+   実測（dev・2.027 MCells）: 63件レポート / 61件焼成 / `not being considered` 0件。
+   焼けないのは `Commissura_anterior` / `Commissura_posterior` の2件のみ（数mm の構造・2mm では不可）。
 6. 工程8（RUN）→ 工程9（検証）: `Input.log` の `Degree of freedoms` 行で
-   **`unknowns > 0` かつ `Dirichlet points > 0`**、E 場の **finite 率 ≈ 100%** を確認。
+   **`unknowns > 0` かつ `Dirichlet points > 0`** を確認する。
+   実測（ペア1）: `2075220 total, 564753 unknowns, 7120 Dirichlet points, 1503347 unused`。
+   ★2026-08-03 訂正: 「E 場の **finite 率 ≈ 100%**」は**誤り**。全身を囲む箱グリッドでは
+   材料の無いセル（空気）が NaN になるため、実測は **26.03%**（527,604 / 2,026,750）で**これが正常**。
+   根拠はソルバーの `unused = 1,503,347` と NaN 数 `1,499,146` がほぼ一致すること。
+   正しい判定は **①材料領域の非ゼロ有限率（実測 99.98%）** と **②`unused` と NaN 数の一致**。
+   実測値（1V 駆動）: `|E| max = 120.3 V/m` / 中央値 0.95 / p99 12.2 V/m。
 
 ### ログの取り方
 結果ディレクトリは **`os.path.dirname(sim.GetOutputFileName())`** で取れる。
