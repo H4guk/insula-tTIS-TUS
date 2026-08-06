@@ -6,6 +6,10 @@
 このファイルは **工程を1つずつ検証した記録**。完成時に成果物としてまとめ直すための一次記録なので、
 「何を確かめて / 何が分かって / 何が未確認か」を工程ごとに残す。
 
+**状態（2026-08-06）**: **Phase 1 dev は完了・Issue #4 はクローズ済み**。工程1〜9 が両ペアで通り、
+TI 包絡まで計算できている。残る宿題は **#12**（`setup_grid.py` が実機で `=== 工程7 PASS ===` を
+一度も出していない）。以下の手順・実測値は**最終構成に更新済み**（2026-08-06 に 8/3 の途中時点の記述を訂正）。
+
 ## 工程とスクリプトの対応（2026-07-31 決定・9工程 = 9スクリプト）
 
 **1工程 = 1スクリプト**にする。工程3（島皮質ROI）は工程2から独立させる。
@@ -16,11 +20,11 @@
 | 2 座標系検出 | `detect_coordinate_system.py` | ある・検証済（ROI 算出は工程3へ分離済み） |
 | 3 島皮質 ROI | `define_insula_roi.py` | **ある**（2026-07-31 新設・再計算＋妥当性検証） |
 | 4 電極配置 | `place_electrodes.py` | ある・検証済 |
-| 5 組織の検出・材料σ | `assign_materials.py` | **ある・実機 PASS**（2026-08-03 新規作成。σ63件＋Voxeler/Grid 登録63件＋前後ゲート。旧版は電極スキップ（#2）・σ値未検証のため 7/31 に削除済みで、内容は別物） |
-| 6 電圧設定（BC） | `setup_boundary.py` | **ある**（2026-08-03 新規作成。**ソリッドBC**。7/30 の「面BC が正解」は撤回＝下記） |
-| 7 グリッド → ボクセル | `setup_grid.py` | **ある**（2026-08-03 新規作成・実機で63件処理/61件焼成）。~~ブロッカー~~ 解決。**Grid 登録はしない**（自動グリッドが暴走して `Cell limit exceeded`）。刻みは Global 5mm ＋ 頭部 Block 2mm |
-| 8 RUN | （未作成） | — |
-| 9 検証 | （未作成） | — |
+| 5 組織の検出・材料σ | `assign_materials.py` | **ある・実機 PASS**（2026-08-03 新規作成。σ は**頭部組織59件のみ**／Voxeler 登録は組織59＋電極4＝63件／前後ゲート付き。**電極には σ を付けない**・**Grid には登録しない**＝下記。旧版は電極スキップ（#2）・σ値未検証のため 7/31 に削除済みで、内容は別物） |
+| 6 電圧設定（BC） | `setup_boundary.py` | **ある・実機 PASS**（2026-08-03 新規作成。**ソリッドBC**。7/30 の「面BC が正解」は撤回＝下記） |
+| 7 グリッド → ボクセル | `setup_grid.py` | **ある**（2026-08-03 新規作成・最終構成での実機は**61件レポート / 59件焼成**）。~~ブロッカー~~ 解決。**Grid 登録はしない**（自動グリッドが暴走して `Cell limit exceeded`）。刻みは Global 5mm ＋ 頭部 Block 2mm。⚠️ **`=== 工程7 PASS ===` を一度も出していない**（`Voxeler.log` の待ち方を修正したが未検証）→ **[#12](https://github.com/H4guk/insula-tTIS-TUS/issues/12)** |
+| 8 RUN | `run_simulation.py` | **ある・実機 PASS**（2026-08-03 新規作成。工程9 と同一ファイル。冒頭で `sim.ClearResults()`＝結果が残っていると Run が拒否される） |
+| 9 検証 | `run_simulation.py` | **ある・実機 PASS**（①材料領域の非ゼロ率 ≥99% ②NaN 数がソルバーの `unused` と一致（相対差1%以内）の2本立て） |
 
 - `ti_analysis.py` は Step 2（Phase 2 / #7）の解析なので**9工程の外**。
 - 工程5〜9 は**検証しながら1本ずつ作る**（判断の記録＝Obsidian `Claude/Decisions/2026-07-31-reset-overbuilt-scripts.md`）。
@@ -201,36 +205,57 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
 
 ---
 
-## 工程7 突破のための手順（ブロッカー）
+## 工程5〜9 の手順（★2026-08-03 確定版）
 
-現象・切り分け・最小再現ケースは `error-log.md`（2026-07-31）にまとめてある。ここでは手順だけ書く。
+~~工程7 突破のための手順（ブロッカー）~~ **ブロッカーは 2026-08-03 に解決した**（真因＝σ を割り当てた
+エンティティを `AutomaticVoxelerSettings` に登録していなかったこと）。以下は**確定した手順**で、
+`scripts/` の4本（`assign_materials.py` → `setup_boundary.py` → `setup_grid.py` → `run_simulation.py`）と
+一致している。切り分けの過程は `error-log.md`（2026-07-31 / 2026-08-03）にある。
 
 ### 鉄則（NaN を避ける順序）
-**材料σ（組織＋電極）→ 電極BC（面に付ける）→（全部終えてから最後に）`CreateVoxels` → Run → ログ確認。**
+**材料σ（組織のみ）→ Voxeler 登録（組織＋電極）→ 電極BC（ソリッド本体）→（全部終えてから最後に）
+`UpdateGrid` → `CreateVoxels` → Run → ログ確認。**
 ボクセル化は割り当てのスナップショットなので、割り当て後に必ず作り直す。各段のあと `document.Save()`。
+
+**★8/3 に確定した構成上の禁止事項（いずれも実測で決着）**
+
+| やらないこと | 理由 |
+|---|---|
+| `AutomaticGridSettings` にエンティティを登録する | 自動グリッドが解剖メッシュの形状に合わせて細分し、`MaxStep` を 50mm にしても `Cell limit exceeded` |
+| 駆動電極に材料σを付ける | σ と Dirichlet BC の同居で HDF5 `attribute already exists` ＝ Run 拒否。どのみち `reassigned to PEC` で σ は使われない |
+| BC を**面**に付ける | `AddBoundarySettings(face)` は恒久的な紐付けを作らず、常に最後の1つだけが載る（電極対を駆動できない） |
+| 結果を持ったまま Run する | 「σ＋BC 二重登録」と**同一メッセージ**で拒否される。区別は `sim.HasResults()`・対処は `sim.ClearResults()` |
+| `Voxel Scene Memory Consumption` で判定する | 幾何の複雑さ（圧縮効率）の指標であって中身の量ではない。判定は `Voxels:` の件数 |
 
 ### 手順
 1. ブラウザ／プロジェクトを**完全リロード**（壊れ sim・古い GridBox・旧結果を捨てる）。
 2. 工程1 → 工程2 → 工程3 → 工程4 を順に実行（`load_yoonsun.py` → `detect_coordinate_system.py`
    → `define_insula_roi.py` → `place_electrodes.py`）。
-3. 工程5（材料σ）: 頭部59組織 ＋ **電極4枚すべてに σ=1.6**。割り当て後に **期待値（63）と実数を突き合わせる**。
-   ★2026-08-03 訂正: 旧記述は「駆動電極（2枚）＝期待値 61」だったが、**非駆動ペアにも σ を付けて 63 に統一**する。
-   理由は、TI 包絡が LF1（T7/P7・2000Hz）と LF2（Fp1/Fp2・2010Hz）の E 場を同一点で合成するため、
-   両 sim のエンティティ集合を揃えないと自動グリッドの刻みがずれて格子が一致しなくなるおそれがあるから。
-   実験でも4枚とも頭部に貼られている状態が実態に近い。
+3. 工程5（材料σ）: **σ を付けるのは頭部59組織のみ**（`LinkMaterialWithDatabase` で IT'IS LF から引き、
+   `Skin` / `Ear_skin_left` / `Ear_skin_right` の3つだけ 0.0002 → **0.465 に上書き**）。
+   **Voxeler への登録は組織59 ＋ 電極4 ＝ 63件**。ゲートは「材料59件」と「登録63件」の2本立てで見る。
+   ★2026-08-03 最終訂正: 旧記述「電極4枚すべてに σ=1.6・期待値63」は**撤回**。σ と Dirichlet BC を
+   同一ソリッドに載せると HDF5 の `attribute already exists` で **Run が拒否される**（工程8 で実測）。
+   失うものは無い——`Voxeler.log` に `will be reassigned to PEC because it constitutes to internal
+   boundary conditions` と出るとおり、**Dirichlet を付けた電極はどのみち PEC 扱いで σ は使われない**。
+   非駆動ペアは材料も BC も持たず焼かれなくなるが、**Grid 登録をやめてグリッドを
+   `GlobalGridSettings` ＋ 頭部ブロックだけで決める構成にしたので、LF1 と LF2 の格子は一致する**
+   （実測で3軸とも `identical=True`）。
    σ の値は **`sim.AllSettings`** を回して `MaterialSettings` から読む（`AllComponents` は σ を持たない）。
    ★**2026-08-03 追加・最重要**: σ を付けただけでは **voxeler の対象にならない**。同じエンティティを
-   **Voxeler 設定と Grid 設定にも登録する**こと（これが 7/22〜8/3 のブロッカーの根本原因だった）:
+   **Voxeler 設定に登録する**こと（これが 7/22〜8/3 のブロッカーの根本原因だった）:
 
    ```python
    vox = [s for s in sim.AllSettings if type(s).__name__ == 'AutomaticVoxelerSettings'][0]
-   grd = [s for s in sim.AllSettings if type(s).__name__ == 'AutomaticGridSettings'][0]
-   for e in entities:
+   for e in entities:                    # 組織59 + 電極4 = 63
        sim.Add(vox, [e])
-       sim.Add(grd, [e])
    ```
 
-   検証は `component.Settings` が **`Automatic` と `Automatic Voxeler Settings` を両方含む**こと。
+   ★2026-08-03 訂正: **`AutomaticGridSettings` には登録しない**（`sim.Add(grd, [e])` は入れない）。
+   登録すると自動グリッドがエンティティ形状に合わせて grid line を細分し、グローバルの `MaxStep` と
+   無関係に `Cell limit exceeded` になる。lec6 で通ったのは SAM head が単純形状だったから。
+   検証は `component.Settings` が **`Automatic Voxeler Settings` を含む**こと
+   （旧記述の「`Automatic` も両方含む」は Grid 登録をやめた構成では成立しない）。
    ★2026-08-03 罠: **`component.Name` はエンティティ名と一致しない**。ViP 由来は `Skin  (Yoon-sun v3.1 Static)`、
    `Skull_cortical  (Yoon-sun v3.1 Static/Bones)` のように `  (モデル名/グループ名)` の接尾辞が付く
    （Python 製の電極 `Elec_T7` には付かない）。完全一致で照合すると組織59個が全部落ちて `4/63` と誤判定する。
@@ -242,29 +267,50 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
    → **sim クラスは Ohmic のままでよい**。
    詳細レシピ → Obsidian `Claude/Knowledge/sim4life-material-assignment.md`「★★最重要」節。
 4. 工程6（BC）: Dirichlet を**電極ソリッド本体**に付ける（`scripts/setup_boundary.py`）。
-   ★2026-08-03 訂正: 旧記述「外側の面に付ける／ソリッドに直接付けると Run が拒否される」は**撤回**。
+   ★2026-08-03 訂正: 旧記述「外側の面に付ける」は**撤回**（面BC は成立しない＝下記）。
+   ただし「ソリッドに材料σと BC を**同時に**付けると Run が拒否される」（7/30 の診断）は**正しかった**——
+   対処が「BC を面に移す」ではなく「**電極から σ を外す**」だっただけ（工程5 を参照）。
    - **面BC は使えない**: `sim.AddBoundarySettings(face)` は恒久的な紐付けを作らず、**常に最後の1つだけ**が
      単一の無名コンポーネントに載る。それ以前の BC は設定だけ残って孤児になり、電極対を駆動できない。
      設定は `AllSettings` から読めるため「付いているのに効いていない」罠になる（実測: BC を2つ付けても
      コンポーネントは1つしか増えず、3つ目を足すとキーが置き換わった）。
-   - **ソリッドBC は正しく紐付く**: `Elec_T7` / `Elec_P7` とも
-     `['Automatic', 'Automatic Voxeler Settings', 'BC_*', 'Saline_Elec_*']` の4キーになり、材料σと併存する。
-   - 「ソリッドだと Run 拒否」の観測はボクセル化が壊れていた期間のもので、拒否はボクセル化の段で起きていた。
-     根本原因（Voxeler/Grid 登録漏れ）修正後は設定段階で問題は出ない。**Run で最終確認する**。
+   - **ソリッドBC は正しく紐付く**: 置き換わりは起きず、既存の電極コンポーネントに BC が追加される。
+     最終構成での実測キーは、駆動電極が `['Automatic Voxeler Settings', 'BC_*']` の**2キー**、
+     非駆動電極が `['Automatic Voxeler Settings']` のみ（＝意図しない BC は付いていない）。
+     ※ 切り分け途中の実測 `['Automatic', 'Automatic Voxeler Settings', 'BC_*', 'Saline_Elec_*']` の4キーは、
+     Grid 登録と電極σを**まだ外していなかった時点**のもの。
+   - **Run で確定済み**: この構成で `unknowns 564,753 / Dirichlet 7,120`（ペア1）が出た（工程8）。
 5. 工程7（グリッド→ボクセル）: 体 5mm ＋ 頭部 Block 2mm（dev）→ `UpdateGrid()` → `CreateVoxels()`。
    `scripts/setup_grid.py`。**`AutomaticGridSettings` は削除する**（残すと `Cell limit exceeded`）。
    判定は `Voxeler.log` の**エンティティ単位の `Voxels:` 件数**。
    ★2026-08-03 訂正: 「`Voxel Scene Memory Consumption` が MB 級」は**誤り**（幾何の複雑さの指標）。
-   実測（dev・2.027 MCells）: 63件レポート / 61件焼成 / `not being considered` 0件。
-   焼けないのは `Commissura_anterior` / `Commissura_posterior` の2件のみ（数mm の構造・2mm では不可）。
-6. 工程8（RUN）→ 工程9（検証）: `Input.log` の `Degree of freedoms` 行で
-   **`unknowns > 0` かつ `Dirichlet points > 0`** を確認する。
-   実測（ペア1）: `2075220 total, 564753 unknowns, 7120 Dirichlet points, 1503347 unused`。
+   実測（dev・`125 x 121 x 134 = 2.027 MCells`）: **61件レポート / 59件焼成** / `not being considered` 0件。
+   焼けないのは `Commissura_anterior` / `Commissura_posterior` の2件のみ（数mm の構造・2mm では不可。
+   σ は白質と同じ 0.0640 なので dev では無視でき、prod の 1mm で拾う）。
+   **`Elec_Fp1` / `Elec_Fp2` にレポートが無いのは正常**（σ も BC も持たないので voxeler が処理する理由が無い）。
+   期待値は固定値で持たず **sim から導出**する（`BC_*` キーを持つ電極を数えて `組織59 + 駆動電極数`）。
+   ★**待ち方の注意（#12）**: `CreateVoxels()` は**非同期で即座に戻り**、`Voxeler.log` は
+   **焼き終わったあとの `document.Save()` で書き出される**。「ログが出るまで待つ（保存しない）」実装だと
+   永遠に現れず、8/3 に 601 / 900 / 300 秒の空待ちを3回発生させた。現在は
+   「25秒待って `document.Save()` → 出なければ30秒間隔で最大5回」に修正済みだが**未検証**。
+   ログは sim ごとに UUID 付きの別ファイルなので、`sim.GetOutputFileName()` の UUID で特定する
+   （「最新のログ」を拾うと別 sim のものを読む）。
+6. 工程8（RUN）→ 工程9（検証）: `scripts/run_simulation.py`。**冒頭で `sim.ClearResults()`**
+   （結果が残ったまま Run すると「σ＋BC 二重登録」と同一メッセージで拒否される）。
+   `Input.log` の `Degree of freedoms` 行で **`unknowns > 0` かつ `Dirichlet points > 0`** を確認する。
+   実測: ペア1 `2075220 total, 564753 unknowns, 7120 Dirichlet points, 1503347 unused`、
+   ペア2 `2075220 total, 564625 unknowns, 7077 Dirichlet points`（**`total` が完全一致**＝同一グリッド）。
    ★2026-08-03 訂正: 「E 場の **finite 率 ≈ 100%**」は**誤り**。全身を囲む箱グリッドでは
    材料の無いセル（空気）が NaN になるため、実測は **26.03%**（527,604 / 2,026,750）で**これが正常**。
    根拠はソルバーの `unused = 1,503,347` と NaN 数 `1,499,146` がほぼ一致すること。
-   正しい判定は **①材料領域の非ゼロ有限率（実測 99.98%）** と **②`unused` と NaN 数の一致**。
-   実測値（1V 駆動）: `|E| max = 120.3 V/m` / 中央値 0.95 / p99 12.2 V/m。
+   正しい判定は **①材料領域の非ゼロ有限率（実測 99.98% / 99.97%）** と **②`unused` と NaN 数の一致**。
+   実測値（1V 駆動）: `|E| max` = 120.3（ペア1）/ 88.7（ペア2）V/m・中央値 0.95 / 1.045 V/m。
+   NaN 数は両ペアで完全一致（1,499,146）＝同じボクセルシーン上で解けている。
+   ※ `ef.Update()` は引数を取らない（`of.Update(0)` とは別の型）。
+7. **TI 包絡**: 両ペアの結果が揃ったら `2·min(|E1|,|E2|)`。前提としてグリッド軸の一致を確認する
+   （実測 `XAxis 126 / YAxis 122 / ZAxis 135` すべて `identical=True`・有限点集合も
+   `finite(LF1) = finite(LF2) = both = 527,604`）。実測: **非ゼロ率 99.95%・max 22.7・
+   中央値 1.621・p99 6.265 V/m**。**ROI 体積重み平均と選択性の照合（≈0.40）は Phase 2（#7）の範囲**。
 
 ### ログの取り方
 結果ディレクトリは **`os.path.dirname(sim.GetOutputFileName())`** で取れる。
@@ -272,11 +318,21 @@ lec6 の教訓「電極と皮膚の間にすき間があると空気になって
 
 | ログ | 見る行 | 正常な状態 |
 |---|---|---|
-| `Voxeler.log` | `Voxel Scene Memory Consumption` | **kB 級で正常**（★2026-08-03 訂正: 旧記述「MB 級」は誤り。動作実績のある `Lec8-practice`（251,378 セル）の実測が **0.132734 kB / 0.229 s**。判定は絶対値でなく**動く sim との相対比較**で行う。失敗例＝421,875 セルで 0.003414 kB / 0.0128 s） |
+| `Voxeler.log` | **`<entity> ... Voxels: N`（エンティティ単位）** | **これが判定基準**。組織59 ＋ 駆動電極2 ＝ 61件が出ること |
 | `Voxeler.log` | `... is not being considered in the voxeling process` | **出ないこと** |
+| `Voxeler.log` | `Voxel Scene Memory Consumption` | **判定に使わない**（★2026-08-03 訂正: 旧記述「MB 級で正常」は誤り。これは**幾何の複雑さ＝圧縮効率**の指標で、ボクセル数に比例しない。軸に平行な箱は 15,625 ボクセルでも 0.0019 kB、解剖メッシュ `SAM_Shell` は 3,994 ボクセルで 0.0149 kB と逆転する） |
 | `Input.log` | `Degree of freedoms: ... N unknowns, M Dirichlet points` | **N > 0 かつ M > 0** |
 
-### それでも通らない場合: ZMT サポート/フォーラムへの照会
+★`Voxeler.log` は**焼成完了後の `document.Save()` で書き出される**（`CreateVoxels()` は非同期で即座に戻る）。
+待つ側が保存しなければ永遠に現れない。sim ごとに UUID 付きの別ファイルなので、
+`sim.GetOutputFileName()` の UUID ＋ 全バージョンの結果ディレクトリ横断で特定する。
+
+### ~~それでも通らない場合: ZMT サポート/フォーラムへの照会~~（★2026-08-03 不要になった）
+
+**照会はしていない**。真因（Voxeler 設定への登録漏れ）を自力で特定して解決したため。
+以下は当時用意した下書きで、**内容は既に古い**（「voxel scene is essentially empty」は誤診断・
+「`AssignEntities` が v10 で廃止」は前提が誤り＝実際のバージョンは **9.6.0.22584**）。
+同種の照会をする際の書式のサンプルとしてのみ残す。
 
 送り先: `s4l-support@zmt.swiss` / https://forum.zmt.swiss/
 添付: `Input.log`・`Voxeler.log`・最小再現コード・Explorer のツリーのスクリーンショット。
