@@ -12,25 +12,27 @@
 ★API が成否も完了も戻り値で教えてくれない点に注意（2026-08-03 実測）:
   - `sim.UpdateGrid()` は**失敗しても例外を投げない**。判定は `GlobalGridSettings.Name` を見る
     （`Grid (Invalid)` / `Grid 125 x 121 x 134 = 2.027 MCells`）
-  - `sim.CreateVoxels()` は**戻ってきても焼き終わっていない**（実測 13.6 秒）。
-    直後にログを読むと空なので「0件」と誤判定する。ログに `Complete Voxel Scene` が出るまで待つ
+  - `sim.CreateVoxels()` は**戻ってきても焼き終わっていない**（実測 13.9 秒）
 
-流れ:
+★★ 検証は別スクリプト `verify_voxels.py` で行う（2026-08-06 確定・GH Issue #12）:
+  **実行中のスクリプトからは、自分が焼いた `Voxeler.log` は見えない。**
+  ファイルが現れるのは**スクリプトが終了したあと**で、実行中に何秒待っても・何回 `document.Save()` を
+  呼んでも現れない（2026-08-06 実測: 焼成は 13.89 秒で完了しているのに、97 / 154 / 211 / 269 / 326 秒の
+  時点の Save では出ず、スクリプト終了時に書かれた）。2026-08-03 の「Save のときに書き出される」は誤り。
+  → **同一スクリプト内で待つ設計は原理的に成立しない**ので、焼成と検証を分ける。
+
+流れ（このスクリプト＝工程7-a）:
   ① 事前ゲート（sim が1つ・材料と BC が入っている）
   ② AutomaticGridSettings を削除
   ③ グリッド設定（体 BODY_STEP / 頭部 Block に HEAD_STEP）→ UpdateGrid → セル数を確認
-  ④ CreateVoxels → Voxeler.log が書き終わるまで待つ
-  ⑤ 事後ゲート（not being considered 0 / レポートが組織59件以上）
-     ※電極は工程5 で σ を付けないため Voxeler.log にレポートが出るかは未確認。
-       電極が焼けているかの最終確認は**工程8 の `Dirichlet points > 0`**（実測 7,120）。
+  ④ CreateVoxels → 焼成ぶんだけ待つ（BAKE_WAIT）→ document.Save() → 終了
+  ⑤ 判定は `verify_voxels.py`（工程7-b）を**このスクリプトが終わってから**実行する
 
 判定に `Voxel Scene Memory Consumption` は使わない（幾何の複雑さの指標であって中身の量ではない）。
 **エンティティ単位の `Voxels:` 件数**で判定する。
 
 出典ノート: Claude/Knowledge/sim4life-material-assignment.md
 """
-import os
-import glob
 import time
 import s4l_v1.document as document
 import s4l_v1.model as model
@@ -44,12 +46,9 @@ BODY_STEP = 5.0                       # 体（電流の帰り道。粗くてよ�
 HEAD_STEP = 2.0                       # dev は 2mm。prod（#37）で 1.0 に上げる
 RESOLUTION = 2.0                      # 既定 0.0625mm は細かすぎる
 
-ELEC = ('Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 N_TISSUE = 59                         # σ を持つ頭部組織
 N_TOTAL = 63                          # Voxeler 登録数（頭部組織59 + 電極4）
-FIRST_WAIT = 25                       # 秒。CreateVoxels の実測は約14秒なので、まずこれだけ待って保存
-RETRY_WAIT = 30                       # 秒。出なければこの間隔で保存し直す
-SAVE_ATTEMPTS = 5                     # 最大試行回数（保存自体が重いので回数で抑える）
+BAKE_WAIT = 40                        # 秒。焼成の実測は 13.9 秒（dev 2.027 MCells）。prod では伸ばす
 
 
 def V(p):
@@ -122,106 +121,18 @@ print('[grid] body=%gmm head=%gmm -> %s' % (BODY_STEP, HEAD_STEP, grid_name))
 if 'Invalid' in grid_name:
     raise SystemExit('[grid] FAILED — グリッドが計算できない（刻みを粗くするか範囲を見直す）')
 
-# ===== ④ ボクセル化（戻り値では完了しないのでログを待つ）=====
-# ★ログの更新時刻だけを待つ実装は空振りする（2026-08-03 に 600 秒待たされた。
-#   ボクセル化自体は成功していたのに mtime が期待どおり動かなかった）。
-#   実行前のスナップショットと突き合わせ、取れなくても**止まらない**ようにする。
-uid = os.path.basename(sim.GetOutputFileName()).split('_Output')[0]
-root = os.path.dirname(os.path.dirname(sim.GetOutputFileName()))
-
-
-def find_log(since):
-    """この sim（UUID 一致）の Voxeler.log で、since 以降に書かれ、完了行を含むものを返す。"""
-    pat = os.path.join(root, '*_Results', uid + '_Voxeler.log')
-    for p in sorted(glob.glob(pat), key=os.path.getmtime, reverse=True):
-        if os.path.getmtime(p) < since:
-            continue
-        body = open(p, encoding='utf-8', errors='replace').read()
-        if 'Complete Voxel Scene' in body:
-            return p, body
-    return None, ''
-
-
+# ===== ④ ボクセル化（焼成のみ。判定は verify_voxels.py）=====
+# ★★ 実行中のスクリプトからは、自分が焼いた Voxeler.log は見えない（2026-08-06 実測）。
+#    焼成は 13.9 秒で終わっているのに、97/154/211/269/326 秒の時点で document.Save() を
+#    呼んでもファイルは現れず、スクリプト終了時に書かれた。よってここでは待たず、
+#    焼成ぶんだけ寝てから保存して抜ける。判定は verify_voxels.py（工程7-b）で行う。
 t0 = time.time()
 sim.CreateVoxels()
-print('[vox ] CreateVoxels returned')
+print('[vox ] CreateVoxels returned (非同期。焼成の実測は約14秒)')
 
-# ★★ `Voxeler.log` は**ボクセル化の完了時ではなく `document.Save()` のときに書き出される**。
-#    しかも `CreateVoxels()` は非同期で即座に戻るので、**直後に Save しても焼き終わっておらず
-#    書かれない**。待っている間に保存しなければ、いつまで待ってもファイルは現れない。
-#    2026-08-03 に 601 秒 / 900 秒 / 300 秒の空待ちを3回やった（実際の焼成は約14秒）。
-#    → **少し待ってから保存し、出なければ間隔を空けて保存を繰り返す**。
-log, txt = None, ''
-for attempt in range(SAVE_ATTEMPTS):
-    time.sleep(FIRST_WAIT if attempt == 0 else RETRY_WAIT)
-    document.Save()
-    log, txt = find_log(t0)
-    print('[vox ] attempt %d/%d (%.0f s): %s'
-          % (attempt + 1, SAVE_ATTEMPTS, time.time() - t0,
-             os.path.basename(log) if log else 'ログはまだ出ていない'))
-    if log:
-        break
-
-if log is None:                            # 諦めるが止めない。Run（工程8）が本当のゲート
-    cands = sorted(glob.glob(os.path.join(root, '*_Results', uid + '_Voxeler.log')),
-                   key=os.path.getmtime)
-    if cands:
-        txt = open(cands[-1], encoding='utf-8', errors='replace').read()
-    print('[vox ] WARNING: Voxeler.log を確認できなかった。古いログで検証を試みる（参考値）')
-else:
-    print('[vox ] done in %.1f s' % (time.time() - t0))
-
-# ===== ⑤ 事後ゲート =====
-lines = txt.splitlines()
-reports, cur = {}, None
-for l in lines:
-    s = l.strip()
-    if s.startswith('Topological Voxeler Report:'):
-        cur = s.split(':', 1)[1].strip()
-    elif cur and s.startswith('Voxels:'):
-        reports[cur] = s.split(':', 1)[1].strip()
-        cur = None
-reports.pop('Complete Voxel Scene', None)
-
-empty = sorted(k for k, v in reports.items() if v in ('None', '0'))
-notcons = [l.strip() for l in lines if 'not being considered' in l]
-pec = [l.strip() for l in lines if 'reassigned to PEC' in l]
-
-print('[post] reports=%d (expected %d)  baked=%d  empty=%d'
-      % (len(reports), N_TOTAL, len(reports) - len(empty), len(empty)))
-print('[post] not being considered: %d' % len(notcons))
-print('[post] electrodes:', dict((e, reports.get(e, '(none)')) for e in ELEC))
-if empty:
-    print('[post] empty entities:', empty)     # 数mm の構造は 2mm グリッドでは解像できない
-for l in pec:
-    print('[post]', l)                          # ソリッド BC の電極は PEC 扱いになる
-
-# 期待値は固定値にせず sim から導出する。
-# voxeler が処理するのは「σ を持つ組織59」＋「BC を持つ駆動電極」だけ。
-# 非駆動ペアは σ も BC も無いので**レポートが出ないのが正常**（2026-08-03 実測）。
-driven = sorted(base(c.Name) for c in sim.AllComponents
-                if base(c.Name) in ELEC
-                and any(k.startswith('BC_') for k in c.Settings.keys()))
-expected = N_TISSUE + len(driven)
-print('[post] driven electrodes: %s  -> expected reports = %d' % (driven, expected))
-
-fail, warn = [], []
-if notcons:
-    fail.append('not being considered が %d 件' % len(notcons))
-if not reports:
-    fail.append('Voxeler.log からレポートを1件も読めない')
-elif len(reports) < N_TISSUE:
-    fail.append('レポート数 %d（組織 %d を下回る）' % (len(reports), N_TISSUE))
-elif len(reports) != expected:
-    warn.append('レポート数 %d（期待 %d）' % (len(reports), expected))
-for e in driven:                      # 駆動電極が焼けていないと Dirichlet が立たない
-    if reports.get(e) in (None, 'None', '0'):
-        fail.append('駆動電極 %s が焼けていない' % e)
-
-for w in warn:
-    print('[warn]', w)
-print('=== 工程7 %s ===' % ('PASS' if not fail else 'FAILED: ' + '; '.join(fail)))
-print('    ※電極が焼けているかは工程8 の `Dirichlet points > 0` で最終確認する')
-print('    grid:', grid_name)
+time.sleep(BAKE_WAIT)
 document.Save()
-print('saved.')
+print('[vox ] baked+saved in %.0f s' % (time.time() - t0))
+print('    grid:', grid_name)
+print('=== 工程7-a（焼成）完了 ===')
+print('    次: このスクリプトが終わってから verify_voxels.py を実行して判定する')
