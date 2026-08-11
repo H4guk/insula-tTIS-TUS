@@ -22,7 +22,7 @@ import glob
 import time
 import s4l_v1.document as document
 
-SIM_NAME = 'tTIS_LF1'
+SIM_NAME = 'tTIS_LF2'                 # ペア1 は 'tTIS_LF1'
 ELEC = ('Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 N_TISSUE = 59                         # σ を持つ頭部組織
 MAX_AGE = 1800                        # 秒。これより古いログは「前回の実行のもの」として警告する

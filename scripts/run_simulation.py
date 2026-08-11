@@ -26,7 +26,7 @@ import time
 import numpy as np
 import s4l_v1.document as document
 
-SIM_NAME = 'tTIS_LF1'                 # ペア2 は 'tTIS_LF2'
+SIM_NAME = 'tTIS_LF2'                 # ペア1 は 'tTIS_LF1'
 
 N_TISSUE = 59
 LOG_TIMEOUT = 900                     # 秒

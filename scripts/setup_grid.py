@@ -38,17 +38,19 @@ import s4l_v1.document as document
 import s4l_v1.model as model
 import XCoreModeling as xc
 
-SIM_NAME = 'tTIS_LF1'
+SIM_NAME = 'tTIS_LF2'                 # ペア1 は 'tTIS_LF1'
 BOX_NAME = 'GridBox_head'
 HEAD_BOX = ((4, 162, 1450), (202, 352, 1665))     # 工程2 実測の頭部グリッド範囲
 
 BODY_STEP = 5.0                       # 体（電流の帰り道。粗くてよい）
-HEAD_STEP = 2.0                       # dev は 2mm。prod（#37）で 1.0 に上げる
-RESOLUTION = 2.0                      # 既定 0.0625mm は細かすぎる
+HEAD_STEP = 1.0                       # ★prod（#37）＝頭部1mm。dev は 2.0 だった
+RESOLUTION = 1.0                      # 既定 0.0625mm は細かすぎる。★最小刻み（HEAD_STEP）に合わせる
+                                      #   ——刻みより粗い解像度を残すと 1mm が効かない恐れがあるため
 
 N_TISSUE = 59                         # σ を持つ頭部組織
 N_TOTAL = 63                          # Voxeler 登録数（頭部組織59 + 電極4）
-BAKE_WAIT = 40                        # 秒。焼成の実測は 13.9 秒（dev 2.027 MCells）。prod では伸ばす
+BAKE_WAIT = 180                       # 秒。dev（2.027 MCells）の焼成は実測 13.9 秒・保存が約65秒。
+                                      #   prod はセル数が約6倍なので焼成 80秒前後を見込んで余裕を取る
 
 
 def V(p):

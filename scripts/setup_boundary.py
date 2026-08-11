@@ -29,9 +29,9 @@ import s4l_v1.document as document
 import s4l_v1.model as model
 import s4l_v1.simulation.emlf as emlf
 
-SIM_NAME = 'tTIS_LF1'
-DRIVE = (('Elec_T7', 1.0, 'BC_T7_pos'),          # ペア1。ペア2 は Elec_Fp1 / Elec_Fp2
-         ('Elec_P7', 0.0, 'BC_P7_gnd'))
+SIM_NAME = 'tTIS_LF2'                            # ペア1 は 'tTIS_LF1'
+DRIVE = (('Elec_Fp1', 1.0, 'BC_Fp1_pos'),        # ペア2。ペア1 は Elec_T7 / Elec_P7
+         ('Elec_Fp2', 0.0, 'BC_Fp2_gnd'))
 ALL_ELEC = ('Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 
 DEFAULT_BC_NAME = 'Boundary Settings'            # sim 作成時から在る既定の BC（駆動には使わない）
