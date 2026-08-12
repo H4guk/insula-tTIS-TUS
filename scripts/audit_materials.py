@@ -1,44 +1,32 @@
-"""Phase 2 事前監査 — ViP 組織名 → DB 材料名 → σ の対応表を出す（読み取り専用）。
+"""材料対応表の監査 — (ViP 組織名 → DB 材料名 → σ) を出力する（読み取り専用）。
 
-対応 Issue: #11（対応表を監査していない）・#10（Skin の σ が記録と食い違う）
+対応 Issue: #11（対応表を監査していない）/ #14（期待レンジが非 LF 前提だった）
 
-工程5（`assign_materials.py`）が済んだ sim に対して実行する。**何も書き換えず・保存もしない**ので、
-prod 用のモデルを触る前の確認として安全に何度でも流せる。
+工程5（`assign_materials.py`）が済んだ sim に対して実行する。**何も書き換えず・保存もしない**。
 
 なぜ要るか:
   組織名 → 材料名の対応づけは `model.AutoAssignMaterials` の単語集合マッチ（`[a-z0-9]+` 分割）＋
-  手動辞書なので、**"もっともらしい別材料" に当たっても気づかない**。σ は組織ごとに桁が決まっている
-  ので、誤対応はレンジ外の値として現れる。
+  手動辞書＋DB 側の別名解決なので、**"もっともらしい別材料" に当たっても気づかない**。
+  59組織すべてを目視できる形に並べ、レポートの材料表としてもそのまま使えるようにする。
 
-出すもの:
-  ① エンティティ名 / リンクされた材料名 / σ の実値 を1行ずつ（TSV。そのまま docs に貼れる）
-  ② 期待レンジとの自動照合（皮質骨 ~0.02 / 海綿骨 ~0.08 / CSF ~2 / 灰白 0.1-0.3 / 白質 0.06-0.15）
-  ③ #10 用に、**上書き前の DB 生値**（IT'IS LF 5.0 の Skin）と sim の評価周波数
+★2026-08-12（#14）: **σ のレンジ判定を落とした。**
+  σ の正しさは工程5 の事後ゲートが「**リンク先 DB の格納値と直接照合**」して担保している。
+  監査側にもハードコードした期待レンジを置くと、**同じことを2箇所で判定して片方だけ古くなる**
+  ——実際に材料を IT'IS LF 5.0 へ移行した際、監査側のレンジ（非 LF の 2 kHz 評価値が前提）が
+  取り残されて正常な材料を NG と判定する状態になった。ここは**対応表の出力に専念**する。
+  残す検査は「σ が読めない / 非 Air なのに 0 以下」だけ（工程5 のゲートが見ていない種類の欠陥）。
+
+出力:
+  ① エンティティ名 / リンクされた材料名 / σ を1行ずつ（TSV。そのまま docs に貼れる）
+  ② 同じ材料を共有する組織の一覧（誤対応は多対1として現れやすい＝監査の観点そのもの）
+  ③ 材料ごとの σ 一覧（レポートの材料表の素）
 
 出典ノート: Claude/Knowledge/sim4life-material-assignment.md
 """
 import s4l_v1.document as document
-import s4l_v1.model as model
 
 SIM_NAME = 'tTIS_LF1'
-DB_NAME = "IT'IS LF 5.0"
-SKIN_NAMES = ('Skin', 'Ear_skin_left', 'Ear_skin_right')
-
-# 期待レンジ（材料名の部分一致・小文字で判定）。出典は docs/phase2-prod.md #11。
-EXPECT = (
-    ('skull_cortical',    0.010, 0.035),
-    ('skull_cancellous',  0.050, 0.120),
-    ('cerebrospinal',     1.500, 2.500),
-    ('grey_matter',       0.080, 0.300),
-    ('white_matter',      0.050, 0.150),
-    ('cerebellum',        0.080, 0.250),
-    ('muscle',            0.200, 0.600),
-    ('fat',               0.010, 0.100),
-    ('blood',             0.500, 1.000),
-    ('eye_vitreous',      1.000, 2.000),
-)
-SANE_LO, SANE_HI = 1e-3, 3.0           # どの生体組織もこの外なら疑う（空気・電極は別扱い）
-NON_TISSUE = ('air',)                  # σ=0 が正常なもの（Air_internal / Background）。レンジ判定から除く
+AIR_NAMES = ('air',)                   # σ=0 が正常なもの（Air_internal / Background）
 
 
 def base(name):
@@ -47,7 +35,7 @@ def base(name):
 
 
 def sigma_of(obj):
-    """材料オブジェクト / 材料設定から σ を取り出す。API 差を吸収する。"""
+    """MaterialSettings から σ を取り出す。"""
     for path in (('ElectricProps', 'Conductivity'), ('Conductivity',)):
         cur = obj
         try:
@@ -71,7 +59,7 @@ except Exception:
     freq = None
 print('[pre ] sim=%s  frequency=%s Hz' % (SIM_NAME, freq))
 
-# component ごとに、その component に紐付いた MaterialSettings を実体で引く
+# component ごとに、その component に紐付いた MaterialSettings を**実体で**引く
 # （材料名は重複しうる＝ Skin / Ear_skin_* が同じ材料名になるので、名前をキーにしない）
 rows = []
 for c in sim.AllComponents:
@@ -90,7 +78,7 @@ for c in sim.AllComponents:
         rows.append((ent, s.Name, sigma_of(s)))
 
 rows.sort()
-print('[pre ] material settings on components: %d' % len(rows))
+print('[pre ] material settings on components: %d（組織59 ＋ 既定の Air ＝ 60 が想定）' % len(rows))
 if not rows:
     raise SystemExit('[pre ] FAILED — 材料設定が1件も取れない（工程5 が済んでいない可能性）')
 
@@ -101,104 +89,43 @@ print('entity\tmaterial\tsigma')
 for ent, mat, sig in rows:
     print('%s\t%s\t%s' % (ent, mat, 'None' if sig is None else '%.6g' % sig))
 print('--- END TSV ---')
-print('')
 
-# ===== ③ 自動照合 =====
-ng = []
-skipped = []
+# ===== ③ 欠陥の検査（工程5 のゲートが見ていない種類だけ）=====
+print('')
+bad = []
 for ent, mat, sig in rows:
     low = (mat or '').lower()
     if sig is None:
-        ng.append((ent, mat, sig, 'σ が読めない'))
-        continue
-    if low in NON_TISSUE:             # Air は σ=0 が正常（生体組織のレンジを当てない）
-        skipped.append((ent, mat, sig))
-        continue
-    hit = [(k, lo, hi) for k, lo, hi in EXPECT if k in low]
-    if hit:
-        k, lo, hi = hit[0]
-        if not (lo <= sig <= hi):
-            ng.append((ent, mat, sig, '期待レンジ %s [%g, %g] 外' % (k, lo, hi)))
-    elif not (SANE_LO <= sig <= SANE_HI):
-        ng.append((ent, mat, sig, '生体組織として非現実的（%g〜%g の外）' % (SANE_LO, SANE_HI)))
+        bad.append((ent, mat, sig, 'σ が読めない'))
+    elif sig <= 0 and low not in AIR_NAMES:
+        bad.append((ent, mat, sig, '非 Air なのに σ <= 0'))
+print('[chk ] 欠陥: %d 件' % len(bad))
+for ent, mat, sig, why in bad:
+    print('       %-28s -> %-28s sigma=%s  %s' % (ent, mat, sig, why))
+print('[chk ] ※ σ の値そのものの検算は工程5（assign_materials.py）が DB 格納値と直接照合する。')
+print('       ここでは重複させない（#14）。')
 
-print('[chk ] range 判定を除外（非生体）: %s'
-      % ', '.join('%s=%g' % (e, s) for e, m, s in skipped))
-print('[chk ] range NG: %d' % len(ng))
-for ent, mat, sig, why in ng:
-    print('       %-28s -> %-32s sigma=%s  %s'
-          % (ent, mat, 'None' if sig is None else '%.6g' % sig, why))
-
-# 同じ材料に何個の組織がぶら下がっているか（誤対応は「多対1」として現れやすい）
+# ===== ④ 同じ材料を共有する組織（誤対応は多対1として現れやすい）=====
 bym = {}
 for ent, mat, sig in rows:
     bym.setdefault(mat, []).append(ent)
 multi = sorted([(m, v) for m, v in bym.items() if len(v) > 1], key=lambda x: -len(x[1]))
+print('')
 print('[chk ] 同じ材料を共有する組織: %d 材料' % len(multi))
 for m, v in multi:
-    print('       %-32s x%d  %s' % (m, len(v), ', '.join(sorted(v))))
+    print('       %-30s x%d  %s' % (m, len(v), ', '.join(sorted(v))))
 
-# ===== ④ #10: 上書き前の DB 生値 =====
+# ===== ⑤ 材料ごとの σ（レポートの材料表の素）=====
 print('')
-print('[#10 ] sim に入っている skin 系の σ（0.465 上書き後の値）:')
+print('--- 材料ごとの σ（%d 材料・レポート用）---' % len(bym))
+print('material\tsigma\tn_entities')
+seen = {}
 for ent, mat, sig in rows:
-    if ent in SKIN_NAMES:
-        print('       %-16s -> %-24s %s' % (ent, mat, 'None' if sig is None else '%.6g' % sig))
-
-print('[#10 ] DB %s の生値:' % DB_NAME)
-# 2026-08-09 実測: 材料プロパティは `m.electric_conductivity` に生えているが**メソッド形式**。
-# ★単独で読んでも「読めた値が本当に DB 値か」を確かめられないので、**上書きしていない材料を
-#   対照群として同時に読み**、sim 側の実測と一致するかで読み取り経路の正しさを検証する。
-CONTROL = (('Muscle', 0.329533), ('Brain (White Matter)', 0.0639697))
-
-
-def props_of(mat):
-    """材料のプロパティを (名前, 値, 単位) の一覧で返す。
-
-    `mat.electric_conductivity` はクラス属性の descriptor が返るだけで
-    `TypeError: 'property' object is not iterable` になる（2026-08-09 実測）ので使わない。
-    `AllProperties` の `PropertyValue` から読む。名前は `Name` ではなく
-    `VariableName` / `Description` に入っている。
-    """
-    out = []
-    for p in mat.AllProperties:
-        nm = getattr(p, 'VariableName', None) or getattr(p, 'Description', None)
-        out.append((str(nm), getattr(p, 'Value', None), str(getattr(p, 'Unit', ''))))
-    return out
-
-
-def sigma_from_props(mat):
-    """名前に conduct を含むプロパティ（磁気側は除く）から σ を引く。"""
-    for nm, val, unit in props_of(mat):
-        low = nm.lower()
-        if 'conduct' in low and 'magnet' in low:
-            continue
-        if 'conduct' in low and 'thermal' not in low:
-            return nm, val, unit
-    return None, None, None
-
-
-try:
-    import s4l_v1.materials as materials
-    db = materials.database[DB_NAME]
-
-    print('       --- Skin の全プロパティ（名前・値・単位）---')
-    for nm, val, unit in props_of(db['Skin']):
-        print('       %-32s = %-22s %s' % (nm, val, unit))
-
-    print('       --- 対照群（sim 側で上書きしていない材料。一致すれば読み取り経路は正しい）---')
-    for nm, sim_sigma in CONTROL:
-        pn, pv, pu = sigma_from_props(db[nm])
-        print('       %-22s DB=%s [%s %s]   sim=%g' % (nm, pv, pn, pu, sim_sigma))
-
-    print('       --- 本題 ---')
-    pn, pv, pu = sigma_from_props(db['Skin'])
-    sim_skin = [s for e, m, s in rows if e == 'Skin']
-    print('       %-22s DB=%s [%s %s]   sim=%s（上書き後）'
-          % ('Skin', pv, pn, pu, sim_skin[0] if sim_skin else '不明'))
-except Exception as ex:
-    print('       取得できず: %r' % (ex,))
+    seen[mat] = sig
+for mat in sorted(bym.keys()):
+    sig = seen.get(mat)
+    print('%s\t%s\t%d' % (mat, 'None' if sig is None else '%.6g' % sig, len(bym[mat])))
 
 print('')
-print('=== 監査 %s ===' % ('PASS（NG 0件）' if not ng else 'NG %d 件 — 上の行を確認' % len(ng)))
+print('=== 監査 %s ===' % ('PASS（欠陥 0 件）' if not bad else 'NG %d 件' % len(bad)))
 print('    書き込みは一切していない（保存もしていない）')
