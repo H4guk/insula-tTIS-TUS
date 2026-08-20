@@ -450,3 +450,59 @@ paper-collector 側のみ（Obsidian `Claude/DailyLogs/2026-08-10.md`）。
 2. **Phase 4（TUS）は同一 Yoon-sun・同一 ROI・同一指標形式**で組む。ROI は
    `sphere_mask((99.1, 295.0, 1562.2), 10mm)`、指標は体積重み平均と選択性、で tTIS 側と揃える。
 3. #13 を触るなら**閉曲面積分（発散定理）**で。単一平面と違い面の位置依存性が原理的に出ない。
+
+---
+
+## 2026-08-20 ★★ Phase 4（TUS）着手 — Acoustic 実装〜初回 Run（焦点は島皮質に部分的）
+
+Phase 3 はスキップ寄りにして、死守ラインの **Phase 4（TUS 実装・#5/#35）** に着手。同一 Yoon-sun・
+同一 ROI（球 (99.1,295.0,1562.2)mm・半径10mm）・同一指標形式、という比較（#6）の制約を守って組む。
+tTIS の工程スクリプト方式（前後ゲート付き・DB から実行時に物性を読む・推測ハードコード禁止）を音響版に写経した。
+
+**設計フェーズ（4-0〜4-3・実機不要の計算は plan スクリプトで）**
+- **4-0 音響 API 確定**: 音響ソルバーは `s4l_v1.simulation.acoustic`（単数形）。emlf と同型で
+  `Simulation`＋`AddMaterialSettings`/`AddSourceSettings`/`AddFieldSensorSettings`/`AddBoundarySettings`、
+  Grid/Voxeler も同じ。`SetupSettings` は `Frequency`(MHz)/`ModelType`(既定 LAPWE)/`Periods`。probe＝`probe_acoustics_api.py`。
+- **4-1 音響物性の対応表**: 全41材料の ρ(`mass_density`)・c(`sound_speed`)・α0(`attenuation_alpha` Np/m/MHz)・
+  b(`attenuation_b`)・B/A を **IT'IS 5.0** から取得（欠落ゼロ）。減衰は **α(f)=α0·f^b**。表は `docs/acoustic-material-audit.md`。
+  probe＝`probe_acoustic_materials.py`。頭蓋は CT 無しの一様骨近似（限界）。
+- **4-2 周波数・グリッド**: `plan_frequency_grid.py` で「2000万セル×≥6セル/λ・律速 c_min≈1500」から算出。
+  **f=250kHz・頭部1mm（6セル/λ）を確定**。Lite は 300kHz まで・500kHz(64.7M)は不可。焦点目安 側方~6mm/軸~42mm。
+- **4-3 トランスデューサ**: `plan_transducer.py` で幾何決定＝**F#=1.0 案 → 実測で修正**。焦点=ROI 中心、
+  設置点=T7(94.8,335.8,1536.4)、実測 T7–焦点=**48.5mm** なので R=48.5mm・開口D=40mm・**F#=1.21**
+  （R=40 固定だと椀が頭皮に埋没するため実距離に追従）。`build_transducer.py`（球→殻→キャップの Boolean）で作成。
+
+**実装フェーズ（T-1〜T-6・tTIS 複製の TUS コピーで作業）**
+- **T-2 材料割当**（`tus_assign_materials.py`）: `TUS_250k`（LAPWE・f=0.25MHz・Periods10）に 59組織の
+  ρ/c/α(250kHz) を DB から読んで割当、Voxeler に 59組織＋Transducer を登録。事後ゲートで DB 値と直接照合。
+- **T-3 Source**（`tus_setup_source.py`）: 正弦波・参照振幅 1MPa・位相0 の SourceSettings を作り Transducer をバインド。
+- **T-4 境界**: BoundarySettings.Type の既定＝**ABC（吸収）**・背景 Water を probe で確認（`tus_probe_boundary.py`）。
+  既定のままで吸収境界が効くので明示設定不要。
+- **T-5 グリッド→ボクセル**（`tus_setup_grid.py`＋`tus_verify_voxels.py`）: 頭部∪Transducer＋余白10mm の箱に
+  Manual 1mm、周辺 5mm。**220×212×237 = 11.054 MCells**（tTIS Phase2 の 12.289M と同程度・上限内）。
+- **T-6 Run**（`tus_run.py`）: **Run 成功・114.8秒**。結果＝`Overall Field` に `p(x,y,z,f)`/`Intensity`/`SAR`/`Velocity` 等。
+  圧力場は全 11M セルで **finite・非ゼロ**。
+
+**初回 Run の定量（T-6b・`tus_focus_analysis.py`）**
+- 全体 **|p|max = 5.95 MPa**（source 1MPa の約6倍＝焦点ゲイン≈6）。ただしその位置は
+  **near-field（音源から16.4mm・ROI 中心からは35.3mm）**。
+- ROI（半径10mm 球）: 中心セル 1.26 MPa・平均 0.68 MPa・最大 2.06 MPa。**ROImax/全体max = 0.346**。
+- ⇒ 島皮質に焦点域はあるが**全体最大は near-field**。原因候補＝①頭蓋の反射・減衰（水1.5 vs 骨6.7 MRayl の
+  大インピーダンス差）②トランスデューサを水相当（音響的に透明）でモデル化＝剛体ピストンでなく near-field が汚れる。
+
+**解決した罠（Knowledge 昇格候補・TUS 音響固有）**
+1. **Source 割当の実体は材料が無いとボクセル化されない** → 初回 Run が `[Point Source Class] + [ERROR] map::at` で
+   失敗（ソースがグリッド面にマップできず点音源に退化）。**Transducer に材料（水相当）を付与**して解決。
+2. **ボクセル化後は設定追加がロックされる**（`incompatible with this type of simulation`・tTIS 既知）。
+   **`sim.ResetVoxels()` で解除**してから材料を足せば通る（tTIS では未確立だった回復手順を実証）。
+3. Voxeler.log は実行中のスクリプトから見えない（tTIS と同じ）ので焼成と判定を分離（`tus_verify_voxels.py`）。
+
+### 次にやること（この時点）
+1. **T-6b-3 軸方向プロファイル**（`tus_axial_profile.py`・用意済み・未実行）で、near-field 最大が
+   **頭蓋界面の物理反射**か **集束不足/水トランスデューサ起因**かを切り分ける。
+2. モデル起因なら **Transducer を剛体（IsReflector=True）**にして再ボクセル化＋再 Run。物理なら
+   tTIS の「2mA では閾値未達」と同型の正直な結果として扱う。
+3. **4-6 選択性**＝tTIS と同一指標（ROI 体積重み平均→選択性＝非標的/標的→閾値超え割合）。
+   選択性は **脳内で標的 vs 非標的**を測り、頭皮/頭蓋/音源・near-field を非標的にどう含めるかを定義（tTIS の
+   「材料全体だと 1.32」問題の音響版）。加えて TUS 固有の -6dB 焦点体積・焦点位置ズレも出す。
+4. → Phase 5（#6）tTIS vs TUS 比較（#21 コンテスト 2026-10-31 の提出物本体）。
