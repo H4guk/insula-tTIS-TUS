@@ -16,8 +16,8 @@ tTIS の assign_materials.py の音響版。Acoustic(LAPWE) シミュを作り�
 流れ:
   ① 対象組織59を確定（AutoAssignMaterials → 頭部グリッド内）＋ Transducer を取得
   ② 事前ゲート（組織数59・Transducer 実在・同名 sim 無し・材料が DB に全部ある）
-  ③ Acoustic シミュ作成・Setup（f=0.25MHz・LAPWE・Periods=10）
-  ④ 59組織に ρ/c/α を割り当て
+  ③ Acoustic シミュ作成・Setup（f=0.25MHz・LAPWE・Periods=40）
+  ④ 59組織＋Transducer に ρ/c/α を割り当て（★Transducer 材料を統合＝Run の map::at 回避）
   ⑤ Voxeler に 59組織＋Transducer を登録
   ⑥ 事後ゲート（材料59・DB値と直接照合・登録60）
 """
@@ -30,7 +30,7 @@ import numpy as np
 
 SIM_NAME = 'TUS_250k'
 FREQ_MHZ = 0.25                        # 250 kHz
-PERIODS = 10
+PERIODS = 40                           # 2026-08-25: 10→40（深部が定常化・焦点/near-field は10でほぼ収束）
 DB_NAME = "IT'IS 5.0"                   # 音響物性を持つ DB（4-1 で確定）
 
 GX, GY, GZ = (4, 202), (162, 352), (1450, 1665)     # 頭部グリッド範囲（組織選択用・tTIS と同一）
@@ -174,8 +174,18 @@ for e in head:
     ms.SpeedOfSound = c
     ms.AttenuationCoefficient = alpha
     created[e.Name] = ms
+
+# ★Transducer にも材料を付ける（2026-08-25 統合）。
+#   Source 割当の実体は材料が無いとボクセル化されず、Run が [Point Source]+map::at で落ちる。
+#   ここ（ボクセル化前）で付ければ ResetVoxels 不要。値は水相当（音源面は Source が駆動するので
+#   本体材料の影響は小さい。剛体にしても場は不変と 2026-08-25 に確認済み）。
+tms = sim.AddMaterialSettings(tr[0])
+tms.Name = 'Transducer_mat'
+tms.MassDensity = 1000.0
+tms.SpeedOfSound = 1500.0
+tms.AttenuationCoefficient = 0.0
 sim.UpdateAllMaterials()
-print('[mat ] material settings: %d' % len(created))
+print('[mat ] material settings: %d 組織 + Transducer_mat' % len(created))
 
 # ===== ⑤ Voxeler 登録（59組織 + Transducer）=====
 vox = [s for s in sim.AllSettings if type(s).__name__ == 'AutomaticVoxelerSettings'][0]
