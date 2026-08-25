@@ -25,7 +25,7 @@ tTIS の `phase2-prod.md` / `phase4-tus.md` と対で使う。
 - Acoustic(LAPWE) sim `TUS_250k`（f=0.25MHz・Periods=40）を作り、頭部59組織に ρ/c/α(250kHz) を IT'IS 5.0 から割当。
 - **★Transducer にも材料（水相当 1000/1500/0）を付ける**（2026-08-25 統合済み。これが無いと Run が `[Point Source]+map::at` で落ちる）。
 - Voxeler に 59組織＋Transducer を登録。`=== T-2 PASS ===` を確認。
-- ※ 統合により **`tus_fix_transducer_material.py` は素の再現では不要**（後付け回復用に残置）。
+- ※ 統合により **`tus_fix_transducer_material.py` は素の再現では不要**（`scripts/archive/` に回復用として残置）。
 
 ### 3. 音源 — `tus_setup_source.py`
 - SourceSettings（正弦波・参照振幅 1 MPa・位相0）を作り Transducer をバインド。`=== T-3 PASS ===`。
@@ -51,4 +51,4 @@ tTIS の `phase2-prod.md` / `phase4-tus.md` と対で使う。
 ## 再現確認（2026-08-26）
 - 手順2の統合（Transducer 材料を assign に内包）後、**素から end-to-end 再実行し再現を確認済み**:
   T-2 PASS（59組織＋Transducer_mat・voxeler 60/60）→ T-3 PASS → グリッド 11.054 MCells → T-5b PASS（Transducer 3960 voxels＝**fix なしで焼ける**）→ **RUN OK（465秒・map::at 出ず）** → 選択性 **0.1978(脳)/0.2054(GM+WM)** ＝以前の値と完全一致。
-- ⇒ **`tus_fix_transducer_material.py` は不要**（回復用に残置）。統合版だけで「押すだけ再現」できる。
+- ⇒ **`tus_fix_transducer_material.py` は不要**（`scripts/archive/` に回復用として残置）。統合版だけで「押すだけ再現」できる。

@@ -50,7 +50,8 @@
 
 設計: `plan_frequency_grid.py`（4-2）・`plan_transducer.py`（4-3）
 実機: `build_transducer.py`（4-3）→ `tus_assign_materials.py`（材料）→ `tus_setup_source.py`（音源）→ `tus_setup_grid.py`＋`tus_verify_voxels.py`（グリッド）→ `tus_run.py`（Run）
-解析: `tus_focus_analysis.py`・`tus_axial_profile.py`・`tus_converge_check.py`・`tus_rigid_transducer.py`・`tus_selectivity.py`（選択性・脳マスク）
+解析: `tus_focus_analysis.py`・`tus_axial_profile.py`・`tus_selectivity.py`（選択性・脳マスク）
+一度きりの検証（`scripts/archive/`）: `tus_converge_check.py`（Periods収束）・`tus_rigid_transducer.py`（剛体でも不変）・各種 probe。配置は `scripts/README.md`。
 
 ## 5. 次（#36 比較）
 tTIS（選択性0.3758・2mAで閾値未達）と TUS（選択性0.20・安全駆動で有効下限ぎりぎり・頭皮律速）を、同一 Yoon-sun・同一 ROI・同一指標で比較表＋図＋結論に。結論の芯＝**「焦点性は TUS が優位／どちらも標準安全域では焦点線量が閾値ぎりぎり／苦しさの質が違う（tTIS=絶対強度・TUS=頭皮 near-field 律速）」**。
