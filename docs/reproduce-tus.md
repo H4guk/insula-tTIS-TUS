@@ -41,6 +41,7 @@ tTIS の `phase2-prod.md` / `phase4-tus.md` と対で使う。
 ### 6. 解析
 - **選択性**: `tus_selectivity.py` — Input.h5 の voxels→(c,ρ) で脳マスクを厳密構築し、|p| 体積重み平均で選択性（≈0.20）。
 - **焦点位置/ROI**: `tus_focus_analysis.py`、軸プロファイル: `tus_axial_profile.py`。
+- **焦点サイズ（5-1）**: `tus_focus_size.py` — 脳内 |p| ピークから -6dB（0.5×）の連結領域を切り出し、体積・ビーム軸長・側方径を実測（設計値 7.3/61.7mm の置き換え）。頭部全域版も出して頭皮 near-field と分離しているか確認する。
 - **安全指標**: MI/ISPPA は `tus_selectivity.py` 内 or 4-4a の抽出（`docs/phase4-tus.md` 参照）。
 
 ## ロック回避の鉄則（tTIS と共通・TUS 固有）

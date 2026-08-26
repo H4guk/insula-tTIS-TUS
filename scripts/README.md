@@ -12,7 +12,7 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 ## TUS（Phase 4）
 - **設計計算（ローカル）**: `plan_frequency_grid.py`（f=250kHz）`plan_transducer.py`（F#=1.21）
 - **本番パイプライン**: `build_transducer.py` → `tus_assign_materials.py` → `tus_setup_source.py` → `tus_setup_grid.py` → `tus_verify_voxels.py` → `tus_run.py`
-- **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py`
+- **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-1 -6dB 焦点サイズ）
 - 手順: `docs/reproduce-tus.md`
 
 ## archive/（一度きり・履歴保存）
