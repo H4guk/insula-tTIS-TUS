@@ -6,7 +6,7 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 ## tTIS（Phase 1–2）
 - **セットアップ**: `load_yoonsun.py` `detect_coordinate_system.py` `place_electrodes.py` `define_insula_roi.py`
 - **工程5–9**: `assign_materials.py` `setup_boundary.py` `setup_grid.py` `verify_voxels.py` `run_simulation.py`
-- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-2 -6dB 焦点サイズ）
+- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-2 -6dB 焦点サイズ） `ti_local_maxima.py`（5-2b 焦点の有無＝局所極大とプロファイル）
 - 手順: `docs/reproduce.md`
 
 ## TUS（Phase 4）

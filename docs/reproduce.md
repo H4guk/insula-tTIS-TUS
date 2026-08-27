@@ -50,7 +50,8 @@
 | 10 | `verify_grid_order.py` | flat 配列の並び順（X-fastest）の検証。**以降すべての前提** |
 | 11 | `sigma_map.py` | 損失密度の規約の確定（`σ = 2·loss/\|E\|²`）と σ マップ・脳マスクの体積 |
 | 12 | **`ti_analysis.py`** | **★TI 包絡 → ROI 定量 → 選択性**。ここで最終数値が出る |
-| 13 | `ti_focus_size.py` | **（#36 5-2）TI 包絡の -6dB 焦点サイズ**。脳内 TI ピークから -6dB 連結領域を切り出し、体積・主軸3方向の全幅・ROI ズレを実測。TUS 側 `tus_focus_size.py` と同じ定義で比較する |
+| 13 | `ti_focus_size.py` | **（#36 5-2）TI 包絡の -6dB 焦点サイズ**。⚠️ **ピーク基準は tTIS では成立しない**と判明（脳内 TI 最大は標的から 96.6mm の電極側）。数値は無効・経緯は `comparison-framework.md` §4 |
+| 14 | `ti_local_maxima.py` | **（#36 5-2b）焦点の有無の切り分け**。ROI 中心 ±40mm の箱で脳内の局所極大（26近傍）を列挙し、ROI 中心を通る X/Y/Z プロファイルを出す。島皮質に山があるか／電極側への裾かを判定する |
 | 13 | `audit_materials.py` | 材料対応表（`material-audit.md` の中身・レポート用） |
 
 補助（必要なときだけ）:
