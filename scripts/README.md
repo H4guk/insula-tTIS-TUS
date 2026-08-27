@@ -6,13 +6,13 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 ## tTIS（Phase 1–2）
 - **セットアップ**: `load_yoonsun.py` `detect_coordinate_system.py` `place_electrodes.py` `define_insula_roi.py`
 - **工程5–9**: `assign_materials.py` `setup_boundary.py` `setup_grid.py` `verify_voxels.py` `run_simulation.py`
-- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-2 -6dB 焦点サイズ） `ti_local_maxima.py`（5-2b 焦点の有無＝局所極大とプロファイル）
+- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-3 -6dB 焦点サイズ） `ti_local_maxima.py`（5-3b 焦点の有無＝局所極大とプロファイル）
 - 手順: `docs/reproduce.md`
 
 ## TUS（Phase 4）
 - **設計計算（ローカル）**: `plan_frequency_grid.py`（f=250kHz）`plan_transducer.py`（F#=1.21）
 - **本番パイプライン**: `build_transducer.py` → `tus_assign_materials.py` → `tus_setup_source.py` → `tus_setup_grid.py` → `tus_verify_voxels.py` → `tus_run.py`
-- **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-1 -6dB 焦点サイズ）
+- **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-2 -6dB 焦点サイズ）
 - 手順: `docs/reproduce-tus.md`
 
 ## archive/（一度きり・履歴保存）
