@@ -96,6 +96,10 @@ if run_ok:
             print('   [%s] -> %s' % (k, subs))
     except Exception as ex:
         print('[res ] structure error:', ex)
+    # ★保存を忘れない（2026-08-27 追加）。tTIS 側 run_simulation.py には元からあったが
+    #   こちらに無く、Run 後に保存しないままプロジェクトを閉じると結果の紐付けを失う。
+    document.Save()
+    print('saved.')
     print('')
     print('=== T-6a done (Run OK + results structure) ===')
 else:
