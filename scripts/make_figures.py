@@ -94,27 +94,37 @@ ax.set_title('Selectivity in the brain', loc='left', fontsize=13, pad=22)
 ax.invert_yaxis()
 save(fig, 'fig1_selectivity')
 
-# ===== Fig.2 標的線量 / 効き始めるライン =====
-fig, ax = base_axes()
-labels = ['tTIS', 'TUS']
-vals = [0.2265 / 0.30, 2.9 / 3.0]
-bars = ax.barh([0, 1], vals, height=0.5, color=[TTIS, TUS])
-ax.set_yticks([0, 1]); ax.set_yticklabels(labels)
-refline(ax, 1.0, 'onset of efficacy', ha='right')
-# ★ラベルは棒のデータ座標に置く（transAxes は invert_yaxis の影響を受けないので
-#   axes 座標で上下を決めると取り違える。2026-08-28 に実際に入れ替わった）
-ax.text(0.03, 0, 'TI 0.2265 V/m  /  0.3 V/m threshold',
-        fontsize=9, color='white', va='center', ha='left')
-ax.text(0.03, 1, 'I$_{SPPA}$ 2.9  /  3 W/cm² lower bound',
-        fontsize=9, color='white', va='center', ha='left')
-for b, v in zip(bars, vals):
-    ax.text(v + 0.02, b.get_y() + b.get_height() / 2, '%.0f %%' % (100 * v),
-            va='center', ha='left', fontsize=12, color=INK)
-ax.set_xlim(0, 1.25)
-ax.set_xlabel('target dose / efficacy onset   (1.0 = onset)')
-ax.set_title('Neither method reaches efficacy at its safety limit',
+# ===== Fig.2 標的線量 / 効き始めるライン（dumbbell）=====
+# ★旧版は tTIS の「ROI 平均」と TUS の「ROI 最大」を並べていた（2026-08-28 に発覚）。
+#   統計量を揃えると評価が変わるので、**平均と最大の両方を1本の線で示す**形にした。
+fig, ax = base_axes(figsize=(7.6, 3.1))
+rows = [
+    ('tTIS', 0.2265 / 0.30, 0.3259 / 0.30, 1.5, TTIS),
+    ('TUS',  0.531 / 3.0,   3.13 / 3.0,    0.0, TUS),
+]
+for i, (lab, mean, mx, frac, col) in enumerate(rows):
+    ax.plot([mean, mx], [i, i], color=col, linewidth=2.5, solid_capstyle='round', zorder=2)
+    ax.plot(mean, i, 'o', ms=11, color=SURFACE, markeredgecolor=col,
+            markeredgewidth=2.5, zorder=3)          # 白抜き = ROI 平均
+    ax.plot(mx, i, 'o', ms=11, color=col, zorder=3)  # 塗り   = ROI 最大
+    ax.text(mean, i - 0.30, '%.0f %%' % (100 * mean), ha='center', va='bottom',
+            fontsize=11, color=INK)
+    ax.text(mx, i - 0.30, '%.0f %%' % (100 * mx), ha='center', va='bottom',
+            fontsize=11, color=INK)
+    ax.text(1.32, i, 'above onset in %.1f %% of the ROI' % frac,
+            ha='left', va='center', fontsize=10, color=INK2)
+ax.set_yticks([0, 1]); ax.set_yticklabels([r[0] for r in rows])
+ax.axvline(1.0, color=MUTED, linestyle='--', linewidth=1.2)
+ax.annotate('onset of efficacy', xy=(1.0, 1.0), xycoords=('data', 'axes fraction'),
+            xytext=(0, 6), textcoords='offset points',
+            ha='right', va='bottom', fontsize=9, color=INK2)
+ax.set_xlim(0, 2.05)
+ax.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0, 1.25])   # データ域だけ目盛る（右は注記の場所）
+ax.set_ylim(1.6, -0.6)
+ax.set_xlabel('target dose / efficacy onset   (1.0 = onset)\n'
+              'open circle = ROI volume mean · filled = ROI maximum (single strongest cell)')
+ax.set_title('Neither method reaches efficacy; tTIS gets closer',
              loc='left', fontsize=13, pad=22)
-ax.invert_yaxis()
 save(fig, 'fig2_dose_vs_threshold')
 
 # ===== Fig.3 標的レベル以上が及ぶ脳体積（内訳つき）=====
