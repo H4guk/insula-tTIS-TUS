@@ -35,7 +35,11 @@ DB_NAME = "IT'IS 5.0"                   # 音響物性を持つ DB（4-1 で確�
 
 GX, GY, GZ = (4, 202), (162, 352), (1450, 1665)     # 頭部グリッド範囲（組織選択用・tTIS と同一）
 TRANSDUCER = 'Transducer'
-SKIP_EXACT = ('Model', 'Grid', 'Bones', 'GridBox_head', TRANSDUCER)
+SKIP_EXACT = ('Model', 'Grid', 'Bones', 'GridBox_head', TRANSDUCER,
+              # ★統合（#36 5-1）用: 電極は tTIS のもの。TUS の音場に参加させないので材料も付けず
+              #   Voxeler にも登録しない（登録しなければ音場に存在しない）。分離版では削除済みで
+              #   表面化しなかったが、統合プロジェクトでは同居するため組織59に混入する。2026-08-27 追加。
+              'Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 
 N_TISSUE = 59
 N_TOTAL = N_TISSUE + 1                  # + Transducer（Voxeler 登録数）

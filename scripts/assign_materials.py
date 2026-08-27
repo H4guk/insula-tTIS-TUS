@@ -48,7 +48,11 @@ DB_NAME = "IT'IS LF 5.0"
 GX, GY, GZ = (4, 202), (162, 352), (1450, 1665)     # 頭部グリッド範囲（工程2 実測）
 ELEC = ('Elec_T7', 'Elec_P7', 'Elec_Fp1', 'Elec_Fp2')
 SKIP_EXACT = ('Model', 'Grid', 'Bones',             # Bones は EntityGroup（実体なし）
-              'GridBox_head')                       # 工程7 のグリッド用補助ブロック（材料もσも持たない）
+              'GridBox_head',                       # 工程7 のグリッド用補助ブロック（材料もσも持たない）
+              'GridBox_TUS',                        # TUS 側のグリッド箱（統合プロジェクトでは同居する）
+              'Transducer')                         # ★統合（#36 5-1）用: TUS の音源。tTIS では場に入れない
+#   ↑ Transducer / GridBox_TUS は **統合プロジェクトでのみ存在**する。tTIS の電場に参加させないので
+#     材料も σ も付けず、Voxeler にも登録しない（登録しなければ電場に存在しない）。2026-08-27 追加。
 SKIN_NAMES = ('Skin', 'Ear_skin_left', 'Ear_skin_right')
 
 # skin の上書きは **やめた**（2026-08-09）。0.465 を入れていた唯一の根拠は「DB 値 0.0002 が
