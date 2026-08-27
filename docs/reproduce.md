@@ -50,6 +50,7 @@
 | 10 | `verify_grid_order.py` | flat 配列の並び順（X-fastest）の検証。**以降すべての前提** |
 | 11 | `sigma_map.py` | 損失密度の規約の確定（`σ = 2·loss/\|E\|²`）と σ マップ・脳マスクの体積 |
 | 12 | **`ti_analysis.py`** | **★TI 包絡 → ROI 定量 → 選択性**。ここで最終数値が出る |
+| 13 | `ti_focus_size.py` | **（#36 5-2）TI 包絡の -6dB 焦点サイズ**。脳内 TI ピークから -6dB 連結領域を切り出し、体積・主軸3方向の全幅・ROI ズレを実測。TUS 側 `tus_focus_size.py` と同じ定義で比較する |
 | 13 | `audit_materials.py` | 材料対応表（`material-audit.md` の中身・レポート用） |
 
 補助（必要なときだけ）:
