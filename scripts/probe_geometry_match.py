@@ -22,7 +22,8 @@ import XCoreModeling as xc
 FOCUS_MM = np.array([99.1, 295.0, 1562.2])   # 解析スクリプトが使う ROI 中心（ハードコード値）
 ROI_R_MM = 10.0
 KEY_PREFIX = ('Elec_', 'Transducer', 'GridBox', 'Skin', 'Model')
-ROI_HINT = ('roi', 'insula', 'island', '島')
+# ★'roi' の部分一致は Thyroid_gland（Thy-roi-d）を拾うので使わない（2026-08-27 の実行で判明）
+ROI_HINT = ('_roi', 'roi_', 'insula', 'island', '島')
 
 
 def xyz(v):
