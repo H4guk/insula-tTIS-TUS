@@ -131,18 +131,42 @@ def isppa(p_pa, rho, c):
     return p_pa ** 2 / (2.0 * rho * c) * 1e-4      # W/m^2 → W/cm^2
 
 
+# ★ISPPA は p^2 に比例するので (平均p)^2 != 平均(p^2)。
+#   ROI の代表値は**セルごとに ISPPA を出してから体積平均**を取る（2026-08-28 修正）。
+isppa_map = (p3 * k) ** 2 / (2.0 * r3 * c3) * 1e-4     # [W/cm^2] 局所 rho,c を使用
+m = roi & brain
+wv = vol[m]
+isppa_mean = float((isppa_map[m] * wv).sum() / wv.sum())
+isppa_max = float(isppa_map[m].max())
+
 print('')
 print('[dose] MI<%.1f 駆動での標的線量' % MI_LIMIT)
 print('  脳内ピーク   |p| = %.4f MPa  MI = %.3f  ISPPA = %.2f W/cm^2  （記録 焦点 %.2f MPa）'
       % (b_p * 1e-6, mi(b_p), isppa(b_p, b_r, b_c), REF['focus_mpa']))
 print('  ROI 内 最大  |p| = %.4f MPa  MI = %.3f  **ISPPA = %.2f W/cm^2**  （記録 %.1f）'
-      % (roi_max * 1e-6, mi(roi_max), isppa(roi_max, r_r, r_c), REF['isppa']))
-print('  ROI 体積平均 |p| = %.4f MPa  MI = %.3f  ISPPA = %.2f W/cm^2'
-      % (roi_mean * 1e-6, mi(roi_mean), isppa(roi_mean, r_r, r_c)))
+      % (roi_max * 1e-6, mi(roi_max), isppa_max, REF['isppa']))
+print('  ROI 体積平均 |p| = %.4f MPa  MI = %.3f  **ISPPA = %.3f W/cm^2**'
+      % (roi_mean * 1e-6, mi(roi_mean), isppa_mean))
+print('     ※参考: 平均 |p| から計算すると %.3f（p^2 の非線形性で**過小評価**になるので使わない）'
+      % isppa(roi_mean, r_r, r_c))
 print('  （ISPPA は局所 rho*c を使用: ROI max で rho=%.1f c=%.1f）' % (r_r, r_c))
 
-# ===== ④ 有効域との照合 =====
-val = isppa(roi_max, r_r, r_c)
+# ===== ④ ROI のうち有効域に入る体積割合（tTIS の「閾値超え 1.5%」に対応）=====
+v_roi = float(wv.sum())
+frac = float(vol[m & (isppa_map >= EFF_LO)].sum()) / v_roi
+print('')
+print('[frac] **ROI のうち ISPPA >= %.0f W/cm^2 の体積割合 = %.1f %%**' % (EFF_LO, 100.0 * frac))
+print('       ※tTIS の対応値＝「TI が閾値 0.3 V/m を超える ROI 体積割合 = 1.5 %」')
+print('')
+print('[sym ] **統計量を揃えた比較**（tTIS / TUS）')
+print('  ROI 平均 / 基準 : tTIS 0.2265/0.3 = 75.5 %%   TUS %.3f/%.0f = %.1f %%'
+      % (isppa_mean, EFF_LO, 100.0 * isppa_mean / EFF_LO))
+print('  ROI 最大 / 基準 : tTIS 0.3259/0.3 = 108.6 %%  TUS %.2f/%.0f = %.1f %%'
+      % (isppa_max, EFF_LO, 100.0 * isppa_max / EFF_LO))
+print('  基準超えの ROI 体積割合 : tTIS 1.5 %%   TUS %.1f %%' % (100.0 * frac))
+
+# ===== ⑤ 有効域との照合 =====
+val = isppa_max
 print('')
 print('[lit ] TUS 神経調節の有効域 ISPPA %.0f–%.0f W/cm^2（Sharif 2025）' % (EFF_LO, EFF_HI))
 if val < EFF_LO:
