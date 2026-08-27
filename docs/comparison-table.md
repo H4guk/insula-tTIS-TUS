@@ -82,6 +82,24 @@
 
 ---
 
+## 4b. 図
+
+| 図 | 内容 | ファイル |
+|---|---|---|
+| Fig.1 | **選択性**（非標的/標的・小さいほど良い）＋ Inoue 2025 ≈0.40 の参照線 | `figures/fig1_selectivity.png` |
+| Fig.2 | **標的線量 / 効き始めるライン**（1.0 = 閾値・両手法とも未達） | `figures/fig2_dose_vs_threshold.png` |
+| Fig.3 | **標的レベル以上が及ぶ脳体積**（solid = ROI と地続き / hatched = 飛び地） | `figures/fig3_reach_volume.png` |
+
+生成は `scripts/make_figures.py`（ローカル実行・Sim4Life 不要・PNG と SVG の両方を出力）。
+配色は categorical slot 1 = tTIS(blue #2a78d6) / slot 2 = TUS(orange #eb6834) を固定順で使用し、
+CVD・コントラストの検証に合格（ΔE 24.7 protan / 33.6 normal / 対比 >=3:1）。内訳は色を増やさず
+**ハッチ**で分けているので、色覚特性・白黒印刷でも読める。
+
+> 未作成: **両手法の場スライスを島皮質断面で並置した図**（tTIS の TI 包絡 / TUS の \|p\|）。
+> Sim4Life からのスライス抽出が要るので別途。
+
+---
+
 ## 5. 数値の出所と再現
 
 | 数値群 | スクリプト | 実行環境 |

@@ -1,0 +1,145 @@
+"""#36 5-6 図の生成（ローカル実行・Sim4Life 不要）。
+
+統合版（1プロジェクト・3シミュレーション）の確定値から、提出物用の図を作る。
+数値の出所は docs/comparison-table.md §5。
+
+  Fig.1  selectivity          選択性（非標的/標的・小さいほど良い）＋ Inoue 2025 参照線
+  Fig.2  dose_vs_threshold    標的線量 / 効き始めるライン（1.0 = 閾値）
+  Fig.3  reach_volume         標的レベル以上が及ぶ脳体積（地続き / 飛び地の内訳つき）
+
+設計（dataviz スキル準拠）:
+  - 形: 3枚とも「2手法の比較 + 参照線」なので横棒に統一
+  - 色: categorical slot 1 = tTIS(blue) / slot 2 = TUS(orange)。**固定順・循環させない**
+        validate_palette.js で全チェック PASS（CVD ΔE 24.7 / 通常視 33.6 / 対比 >=3:1）
+  - 内訳は色を増やさず **texture（ハッチ）** で分ける＝CVD・印刷・forced-colors で安全
+  - grid/axes は recessive、値は直接ラベル、参照線はグレー破線
+実行: python3 scripts/make_figures.py   → docs/figures/*.png (+ .svg)
+"""
+import os
+
+os.environ.setdefault('MPLCONFIGDIR', '/tmp/claude-501/mpl')
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# ---- palette（dataviz reference palette・light surface）----
+SURFACE = '#fcfcfb'
+INK = '#0b0b0b'
+INK2 = '#52514e'
+MUTED = '#8a8983'
+TTIS = '#2a78d6'      # categorical slot 1
+TUS = '#eb6834'       # categorical slot 2
+
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'figures')
+os.makedirs(OUT, exist_ok=True)
+
+plt.rcParams.update({
+    'figure.facecolor': SURFACE,
+    'axes.facecolor': SURFACE,
+    'savefig.facecolor': SURFACE,
+    'font.family': 'DejaVu Sans',
+    'font.size': 11,
+    'axes.edgecolor': MUTED,
+    'axes.linewidth': 0.8,
+    'text.color': INK,
+    'axes.labelcolor': INK2,
+    'xtick.color': INK2,
+    'ytick.color': INK,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 12,
+})
+
+
+def base_axes(figsize=(7.6, 2.7)):
+    fig, ax = plt.subplots(figsize=figsize)
+    for side in ('top', 'right', 'left'):
+        ax.spines[side].set_visible(False)
+    ax.spines['bottom'].set_color(MUTED)
+    ax.xaxis.grid(True, color='#e6e5e1', linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis='y', length=0)
+    return fig, ax
+
+
+def refline(ax, x, text, ha='center'):
+    """参照線と、その注記を**軸の上端**に置く。
+    invert_yaxis() を使うとデータ座標の上下が反転するので、注記は axes 座標に固定する。"""
+    ax.axvline(x, color=MUTED, linestyle='--', linewidth=1.2)
+    ax.annotate(text, xy=(x, 1.0), xycoords=('data', 'axes fraction'),
+                xytext=(0, 6), textcoords='offset points',
+                ha=ha, va='bottom', fontsize=9, color=INK2)
+
+
+def save(fig, name):
+    fig.tight_layout()
+    for ext in ('png', 'svg'):
+        fig.savefig(os.path.join(OUT, '%s.%s' % (name, ext)), dpi=200)
+    plt.close(fig)
+    print('  wrote %s.png / .svg' % name)
+
+
+# ===== Fig.1 選択性 =====
+fig, ax = base_axes()
+labels = ['tTIS', 'TUS']
+vals = [0.3758, 0.1949]
+bars = ax.barh(labels, vals, height=0.5, color=[TTIS, TUS])
+refline(ax, 0.40, 'Inoue 2025 ≈ 0.40', ha='right')
+for b, v in zip(bars, vals):
+    ax.text(v + 0.008, b.get_y() + b.get_height() / 2, '%.4f' % v,
+            va='center', ha='left', fontsize=12, color=INK)
+ax.set_xlim(0, 0.46)
+ax.set_xlabel('non-target mean / target mean   (lower is better)')
+ax.set_title('Selectivity in the brain', loc='left', fontsize=13, pad=22)
+ax.invert_yaxis()
+save(fig, 'fig1_selectivity')
+
+# ===== Fig.2 標的線量 / 効き始めるライン =====
+fig, ax = base_axes()
+labels = ['tTIS', 'TUS']
+vals = [0.2265 / 0.30, 2.9 / 3.0]
+bars = ax.barh([0, 1], vals, height=0.5, color=[TTIS, TUS])
+ax.set_yticks([0, 1]); ax.set_yticklabels(labels)
+refline(ax, 1.0, 'onset of efficacy', ha='right')
+# ★ラベルは棒のデータ座標に置く（transAxes は invert_yaxis の影響を受けないので
+#   axes 座標で上下を決めると取り違える。2026-08-28 に実際に入れ替わった）
+ax.text(0.03, 0, 'TI 0.2265 V/m  /  0.3 V/m threshold',
+        fontsize=9, color='white', va='center', ha='left')
+ax.text(0.03, 1, 'I$_{SPPA}$ 2.9  /  3 W/cm² lower bound',
+        fontsize=9, color='white', va='center', ha='left')
+for b, v in zip(bars, vals):
+    ax.text(v + 0.02, b.get_y() + b.get_height() / 2, '%.0f %%' % (100 * v),
+            va='center', ha='left', fontsize=12, color=INK)
+ax.set_xlim(0, 1.25)
+ax.set_xlabel('target dose / efficacy onset   (1.0 = onset)')
+ax.set_title('Neither method reaches efficacy at its safety limit',
+             loc='left', fontsize=13, pad=22)
+ax.invert_yaxis()
+save(fig, 'fig2_dose_vs_threshold')
+
+# ===== Fig.3 標的レベル以上が及ぶ脳体積（内訳つき）=====
+fig, ax = base_axes(figsize=(7.6, 3.1))
+labels = ['tTIS', 'TUS']
+contig = [21.9, 6.4]                 # ROI と地続き
+island = [50.5 - 21.9, 8.7 - 6.4]    # 飛び地
+colors = [TTIS, TUS]
+for i, (lab, c, isl, col) in enumerate(zip(labels, contig, island, colors)):
+    ax.barh(i, c, height=0.5, color=col)
+    ax.barh(i, isl, left=c, height=0.5, color=col, alpha=0.42,
+            hatch='///', edgecolor=SURFACE, linewidth=2.0)
+ax.set_yticks([0, 1])
+ax.set_yticklabels(labels)
+ax.axvline(4.186, color=MUTED, linestyle='--', linewidth=1.2)
+ax.text(50.5 + 1.5, 0, '50.5 mL   12.1× ROI', va='center', ha='left', fontsize=12, color=INK)
+ax.text(8.7 + 1.5, 1, '8.7 mL   2.1× ROI', va='center', ha='left', fontsize=12, color=INK)
+ax.text(21.9 / 2, 0, '43 % contiguous', va='center', ha='center', fontsize=10, color='white')
+ax.text(6.4 / 2, 1, '74 %', va='center', ha='center', fontsize=10, color='white')
+ax.set_xlim(0, 72)
+ax.set_xlabel('brain volume at or above the target level [mL]\n'
+              'solid = contiguous with the ROI · hatched = detached · dashed = ROI volume (4.19 mL)')
+ax.set_title('TUS confines the target-level field; tTIS does not',
+             loc='left', fontsize=13, pad=14)
+ax.invert_yaxis()
+save(fig, 'fig3_reach_volume')
+
+print('figures -> %s' % OUT)
