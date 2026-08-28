@@ -30,6 +30,9 @@ ROI_R_MM = 10.0
 Y_RANGE = (248.0, 362.0)
 Z_RANGE = (1498.0, 1622.0)
 VMAX = 4.0                      # 標的レベルの何倍まで色を割り当てるか
+# ★表示範囲は両パネルで揃える。tTIS は空気中に電場が無い（材料外は NaN）が
+#   TUS は背景が水なので値が続く——揃えないと非対称に見える（2026-08-28 修正）
+XLIM = (250.0, 348.0)
 
 TI_NAMES = ('tTIS_LF1', 'tTIS_LF2')
 I_TARGET_MA = (0.891, 1.109)
@@ -209,19 +212,25 @@ for ax, (title, dat, br, yv, zv, col) in zip(axes, panels):
     ext = [yv[0], yv[-1], zv[0], zv[-1]]
     im = ax.imshow(dat.T, origin='lower', extent=ext, aspect='equal',
                    cmap=ramp(col), vmin=0, vmax=VMAX, interpolation='nearest')
+    # ★脳の外を薄くして脳内を主役にする（頭皮 near-field は文脈として残す）
+    veil = np.zeros(br.T.shape + (4,))
+    veil[..., :3] = 1.0
+    veil[..., 3] = np.where(br.T, 0.0, 0.55)
+    ax.imshow(veil, origin='lower', extent=ext, aspect='equal', interpolation='nearest')
     # 脳の輪郭
     ax.contour(yv, zv, br.T.astype(float), levels=[0.5], colors=[MUTED],
-               linewidths=0.8, alpha=0.7)
+               linewidths=0.9)
     # 標的レベル（1.0）の等値線
     ax.contour(yv, zv, dat.T, levels=[1.0], colors=[INK], linewidths=1.4)
     # ROI 円
     th = np.linspace(0, 2 * np.pi, 200)
     ax.plot(FOCUS_MM[1] + ROI_R_MM * np.cos(th), FOCUS_MM[2] + ROI_R_MM * np.sin(th),
-            color=INK, linestyle='--', linewidth=1.4)
+            color=INK, linestyle='--', linewidth=1.6)
     ax.set_title(title, loc='left', fontsize=12, color=INK, pad=8)
-    ax.set_xlabel('Y [mm]')
-    for s in ('top', 'right'):
-        ax.spines[s].set_visible(False)
+    ax.set_xlabel('Y [mm]', labelpad=6)
+    ax.set_xlim(*XLIM)
+    for sp in ('top', 'right'):
+        ax.spines[sp].set_visible(False)
     ax.spines['left'].set_color(MUTED); ax.spines['bottom'].set_color(MUTED)
 
 axes[0].set_ylabel('Z [mm]')
@@ -230,8 +239,10 @@ cb.set_label('field strength / target level   (1.0 = ROI mean)', color=INK2)
 cb.outline.set_edgecolor(MUTED)
 fig.suptitle('Field on the insula plane (X = %.1f mm):  TUS forms a focus, tTIS does not'
              % x_used_t, x=0.02, ha='left', fontsize=13, color=INK)
-fig.text(0.02, 0.02,
-         'dashed circle = ROI (r = 10 mm) · black line = target level (1.0) · grey line = brain outline',
+fig.subplots_adjust(bottom=0.18)
+fig.text(0.02, 0.03,
+         'dashed circle = ROI (r = 10 mm) · black line = target level (1.0) · '
+         'grey line = brain outline · area outside the brain is dimmed',
          fontsize=9, color=INK2)
 
 for ext in ('png', 'svg'):
