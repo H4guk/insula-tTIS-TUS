@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+"""提出用 notebook の仮版を組み立て、各節の語数を検算する。"""
+import json, re, os
+
+ABSTRACT = """Non-invasive access to the insula is a bottleneck for addiction therapy, but the region sits deep and is hard to reach selectively. We compared temporal interference stimulation (tTIS) and transcranial ultrasound stimulation (TUS) on a single head model, each driven at its own clinical safety limit. TUS forms a focus near the target yet delivers only 18% of the level at which ultrasound neuromodulation begins to work; tTIS reaches 76% of its activation threshold but forms no focus at all, the insula lying on a monotonic decay from the electrodes. Focality and depth of reach trade off."""
+
+METHODS = """tTIS and TUS are the two non-invasive candidates that can plausibly reach deep targets, so we compared them directly. Both were built on the same Yoon-sun v3.1 model (26-year-old female) inside one Sim4Life.lite project holding three simulations, so that any difference is attributable to the method rather than to the head. The target was a 10 mm sphere at the left insula (4.19 mL), identical in both. tTIS used montage I (T7-P7 at 2000 Hz, Fp1-Fp2 at 2010 Hz) scaled to 0.891 and 1.109 mA, giving the envelope 2*min(|E1|,|E2|); TUS used a single focused bowl (F# 1.21, 250 kHz) placed at T7 and driven until the global mechanical index reached 1.9. Head tissue was discretised at 1 mm, giving 12.3 and 11.1 million cells. Three quantities were compared: selectivity, defined as non-target over target mean; the brain volume at or above the target level; and the target dose relative to the level at which each method starts working, 0.3 V/m for tTIS and 3 W/cm2 for TUS. The integrated build reproduced separately built projects to within 1% on volume means."""
+
+RESULTS = """Selectivity was 0.376 for tTIS and 0.195 for TUS. On the insula plane the two fields differ in kind rather than in degree (Figure 1): the TUS field closes around the target, whereas the tTIS field decays monotonically from the electrode side without forming a maximum. The brain volume at or above the target level was 50.5 mL for tTIS, 12.1 times the ROI, against 8.7 mL for TUS, 2.1 times the ROI (Figure 2). Of that volume, 43% was contiguous with the ROI for tTIS but 74% for TUS, so more than half of the tTIS volume was detached from the target. The strongest point inside the brain was 10.7 times the target level for tTIS and lay 96.6 mm away on the electrode side, whereas for TUS it was 2.8 times the target level and lay 10.3 mm from the target. At their safety limits the ROI volume mean reached 76% of onset for tTIS and 18% for TUS. The fraction of the ROI above onset was 1.5% for tTIS and 0.0% for TUS, the latter amounting to one or two cells (Figure 3)."""
+
+DISCUSSION = """The two methods fail in opposite ways. TUS confines the target-level field to a single region, but the near-field pressure in the scalp fat reaches a mechanical index of 12.8 at reference drive, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA current ceiling itself, yet its field at the target is closer to threshold precisely because the insula sits on a monotonic decay from the electrodes rather than at a focus. The improvement paths therefore differ: multi-pair optimisation to create a focus for tTIS, and larger apertures or phased arrays to spare the scalp for TUS.
+
+Reproducing taste, the longer-term motivation for targeting the insula, is out of reach for both. Taste quality is carried by a distributed population code rather than a spatial map, so a single focus cannot address it however sharp it becomes.
+
+One model, a spherical ROI and uniform bone without CT limit these numbers. No statistical confidence interval follows from a single head; instead we measured reproducibility against a separate build, finding volume means within 1% and single cells varying by 6 to 7%."""
+
+CONCLUSIONS = """On one head model, with each method at its own safety limit, four things follow. First, the difference in focality is not one of size but of whether a focus exists at all: TUS forms one, tTIS does not. Second, neither method reaches the level at which it begins to work, although tTIS comes closer, 76% against 18% of onset at the ROI mean. Third, focality and depth of reach trade off, giving a well focused but weak TUS against an unfocused but stronger tTIS, and because the limiting mechanism differs the two need different fixes. Fourth, neither can reproduce taste quality, since a single focus cannot address a distributed population code."""
+
+def wc(t):
+    t = re.sub(r'\s+', ' ', t).strip()
+    return len(t.split(' '))
+
+LIMITS = [('Abstract', ABSTRACT, 100), ('Methods', METHODS, 200), ('Results', RESULTS, 200),
+          ('Discussion', DISCUSSION, 200), ('Conclusions', CONCLUSIONS, 150)]
+print('%-12s %6s %6s  %s' % ('section', 'words', 'limit', 'status'))
+total = 0
+for name, txt, lim in LIMITS:
+    n = wc(txt); total += n
+    print('%-12s %6d %6d  %s' % (name, n, lim, 'OK' if n <= lim else '*** OVER by %d ***' % (n - lim)))
+print('%-12s %6d %6d' % ('TOTAL', total, 850))
+
+# ============ notebook を組み立てる ============
+CODE = '''# Target-level reach volume — the number behind Figures 2 and 3.
+# Run inside the Sim4Life project that holds tTIS_LF1, tTIS_LF2 and TUS_250k.
+# Full scripts: https://github.com/H4guk/insula-tTIS-TUS  (scripts/reach_volume.py)
+
+import numpy as np, s4l_v1.document as document
+
+FOCUS_MM, ROI_R_MM = np.array([99.1, 295.0, 1562.2]), 10.0
+
+def reach(field3, brain3, roi3, vol3):
+    """Volume at or above the target level, and how much of it touches the ROI."""
+    w = vol3[roi3 & brain3]
+    target = float((field3[roi3 & brain3] * w).sum() / w.sum())   # ROI volume mean
+    ge = brain3 & (field3 >= target)                              # at or above it
+    mL = lambda m: float(vol3[m].sum()) * 1e6
+    return dict(target=target, v_ge=mL(ge), v_roi=mL(roi3),
+                ratio=mL(ge) / mL(roi3), brain_pct=100 * mL(ge) / mL(brain3))
+
+# tTIS: TI = 2*min(s1|E1|, s2|E2|); the current scaling cannot be skipped because
+# min() is non-linear, so the two pairs must be scaled before they are combined.
+# TUS: |p| straight from the acoustic solver.
+# -> tTIS 50.5 mL (12.1x ROI, 5.3% of the brain) / TUS 8.7 mL (2.1x ROI, 0.8%)
+'''
+
+FIG_CAPS = [
+    ("figures/fig1_field_slices.png",
+     "**Figure 1** Field on the insula plane (X = 99.5 mm), both panels normalised to the target "
+     "level (ROI volume mean). Black line: target level (1.0). Dashed circle: ROI (r = 10 mm). "
+     "Grey line: brain outline; area outside the brain is dimmed. TUS closes a contour around the "
+     "target; tTIS does not."),
+    ("figures/fig3_reach_volume.png",
+     "**Figure 2** Brain volume at or above the target level. Solid: contiguous with the ROI. "
+     "Hatched: detached. Dashed line: ROI volume (4.19 mL). More than half of the tTIS volume is "
+     "detached from the target."),
+    ("figures/fig2_dose_vs_threshold.png",
+     "**Figure 3** Target dose relative to the onset of efficacy (1.0 = onset). Open circle: ROI "
+     "volume mean. Filled: ROI maximum, i.e. the single strongest cell. The long TUS line shows "
+     "that only the centre of its focus approaches onset."),
+]
+
+def md(src):
+    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+
+cells = [
+    md("# Focality and reach trade off: tTIS versus TUS targeting the human insula\n"),
+    md("### *by {NAME SURNAME}*\n\n*Submitted to S4L Student Competition 2026*\n"),
+    md("## Abstract\n"), md(ABSTRACT + "\n"),
+    md("## Methods\n"), md(METHODS + "\n"),
+    md("## Results\n"), md(RESULTS + "\n"),
+    md("## Discussion\n"), md(DISCUSSION + "\n"),
+    md("## Conclusions\n"), md(CONCLUSIONS + "\n"),
+    md("## Figures\n"),
+]
+for path, cap in FIG_CAPS:
+    cells.append(md("![](%s)\n" % path))
+    cells.append(md(cap + "\n"))
+cells.append({"cell_type": "code", "execution_count": None, "metadata": {},
+              "outputs": [], "source": CODE.splitlines(keepends=True)})
+
+nb = {"cells": cells,
+      "metadata": {"kernelspec": {"display_name": "Sim4Life", "language": "python", "name": "python3"},
+                   "language_info": {"name": "python", "version": "3.11.9"}},
+      "nbformat": 4, "nbformat_minor": 5}
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'submission_draft.ipynb')
+with open(out, 'w') as f:
+    json.dump(nb, f, ensure_ascii=False, indent=1)
+print('')
+print('wrote %s  (%d cells)' % (out, len(cells)))
