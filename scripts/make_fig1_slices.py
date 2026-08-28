@@ -234,12 +234,15 @@ for ax, (title, dat, br, yv, zv, col) in zip(axes, panels):
     ax.spines['left'].set_color(MUTED); ax.spines['bottom'].set_color(MUTED)
 
 axes[0].set_ylabel('Z [mm]')
-cb = fig.colorbar(im, ax=axes, fraction=0.035, pad=0.02, extend='max')
+# ★カラーバーは専用の軸に置く。fig.colorbar(ax=axes) と subplots_adjust を併用すると
+#   右パネルがカラーバーに食われる（2026-08-28 修正）
+fig.subplots_adjust(left=0.08, right=0.855, bottom=0.20, top=0.86, wspace=0.10)
+cax = fig.add_axes([0.875, 0.20, 0.018, 0.66])
+cb = fig.colorbar(im, cax=cax, extend='max')
 cb.set_label('field strength / target level   (1.0 = ROI mean)', color=INK2)
 cb.outline.set_edgecolor(MUTED)
 fig.suptitle('Field on the insula plane (X = %.1f mm):  TUS forms a focus, tTIS does not'
              % x_used_t, x=0.02, ha='left', fontsize=13, color=INK)
-fig.subplots_adjust(bottom=0.18)
 fig.text(0.02, 0.03,
          'dashed circle = ROI (r = 10 mm) · black line = target level (1.0) · '
          'grey line = brain outline · area outside the brain is dimmed',
@@ -247,7 +250,7 @@ fig.text(0.02, 0.03,
 
 for ext in ('png', 'svg'):
     path = os.path.join(OUT_DIR, 'fig1_field_slices.%s' % ext)
-    fig.savefig(path, dpi=200, bbox_inches='tight')
+    fig.savefig(path, dpi=200)
     print('[out ] %s' % path)
 plt.close(fig)
 print('')
