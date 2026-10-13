@@ -138,12 +138,12 @@
 |---|---|---|
 | **Fig.1** | **島皮質断面での場の並置**（X=99.5mm の YZ 平面・**両パネルとも標的レベルで正規化**・黒線 = 標的レベル 1.0 の等値線・破線 = ROI・脳外は減光） | `figures/fig1_field_slices.png` |
 | Fig.2 | **標的線量 / 効き始めるライン**（dumbbell: 白抜き = ROI 平均・塗り = ROI 最大。1.0 = 基準。右に基準超えの ROI 体積割合） | `figures/fig2_dose_vs_threshold.png` |
-| Fig.3 | **標的レベル以上が及ぶ脳体積**（solid = ROI と地続き / hatched = 飛び地） | `figures/fig3_reach_volume.png` |
+| Fig.3 | **標的レベル以上が及ぶ脳体積**（solid = ROI と地続き / hatched = 飛び地）。tTIS 35.9 mL のうち 98% が地続き（飛び地はわずか）・TUS 7.3 mL のうち 88% | `figures/fig3_reach_volume.png` |
 
 生成は `scripts/make_figures.py`（ローカル実行・Sim4Life 不要・PNG と SVG の両方を出力）。
 **Fig.1 は Sim4Life 側で生成**（`make_fig1_slices.py`・matplotlib 3.9.2）、**Fig.2/3 はローカル**（`make_figures.py`）。
 **Fig.1 の正規化がこの図の肝**——V/m と Pa という単位の違う場を「標的レベル（ROI 体積重み平均）の何倍か」に
-そろえたので**同じカラーバーで並べられ**、**1.0 の等値線が Fig.3 の 50.5 / 8.7 mL と直接対応する**（形 → 量）。
+そろえたので**同じカラーバーで並べられ**、**1.0 の等値線が Fig.3 の 35.9 / 7.3 mL と直接対応する**（形 → 量）。
 **Fig.2 は平均と最大を1本の線で結んである**——線が長いほど ROI 内の不均一が大きい。
 **TUS の線が長い**のは焦点の中心だけ高いためで、**焦点を結ぶこと（結論①）と表裏一体**。
 ※ `fig1_selectivity.png`（選択性バー）は提出物からは落とす（数値を Results 本文で述べれば足りる）。
