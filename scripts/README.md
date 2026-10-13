@@ -19,7 +19,12 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 - **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-2 -6dB 焦点サイズ）
 - 手順: `docs/reproduce-tus.md`
 
+## 神経レベル比較（Phase 6・GH #16）
+- **tTIS**: `neuron_ti_create.py`（Neuron sim `TI_Neuron` を作り `tTIS_LF1`/`LF2` の場をつなぐ）→ `neuron_ti_place_axons.py`（標的・標的外に MRG 軸索を3方向ずつ・計6本）→ `neuron_ti_read_titration.py`（Titration の倍率を読む。結果は `results/neuron_ti_titration_2026-10-13.json`）。神経を設定に入れるのは GUI のドラッグ
+- **TUS**: `neuron_tus_site_pressure.py`（Sim4Life・2か所の |p| を MI<1.9 駆動で）→ `neuron_tus_pysonic.py`（**ローカル** PySONIC・RS 神経 250 kHz 100 ms・閾値と倍率。結果は `results/neuron_tus_pysonic_2026-10-13.txt`）
+
 ## archive/（一度きり・履歴保存）
+- **#16 関門（tutorial）**: `neuron_tutorial_beat_check.py`（2000/2010 Hz の Source から 10 Hz のうなり）`neuron_tutorial_limit_probe.py`（Lite の神経上限 10 本）
 - **調査 probe**: `probe_material_source.py`（tTIS σ）/ `probe_acoustics_api.py` `probe_acoustic_materials.py` `probe_acoustic_sim_api.py` `probe_modeling_api.py` `tus_probe_boundary.py` `tus_field_probe.py`（TUS API・物性・幾何・境界の確定に使用）
 - **使い捨て検証**: `tus_converge_check.py`（Periods 収束）`tus_rigid_transducer.py`（剛体でも不変＝near-field は物理）
 - **回復用（現在は不要）**: `tus_fix_transducer_material.py` ← トランスデューサ材料は `tus_assign_materials.py` に統合済み（2026-08-26 再現確認）。ボクセル化後に材料を足したくなった時の回復手順として残置。
