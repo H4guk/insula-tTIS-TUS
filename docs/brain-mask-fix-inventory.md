@@ -97,6 +97,8 @@ tTIS の「脳内 TI 最大点」は脳ではなく腱・靭帯だった（`scri
 
 経過の記録は、当時の値のまま残す。冒頭か該当箇所に「2026-10-13 に脳の定義を直した。新しい値は `brain-mask-fix-inventory.md`」と注記する。
 
+進捗: progress-log・reproduce・reproduce-integrated・reproduce-tus ✅ 2026-10-14（冒頭に注記。reproduce 系は「どのスクリプトの期待値として今も有効か」も書いた）。`phase6-neuron.md` はこのブランチに無い〔#16 のブランチ〕ので #16 をやり直すときに扱う
+
 | ファイル | 行 | 中身 |
 |---|---|---|
 | `progress-log.md` | 8, 19, 342, 375, 383, 390, 544, 546, 547, 570 | Phase 2・4 当時の選択性・脳マスク |
