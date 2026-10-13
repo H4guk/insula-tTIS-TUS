@@ -11,9 +11,12 @@ tTIS では成立しない**ことが判明した。そこで測り直しの前�
   ② ROI 中心を通る **X / Y / Z 3方向の TI プロファイル**（±40mm）を出し、標的の位置に山があるか、
      一方向へ単調に増えているだけかを目で見る。
 
-場の作り方・脳マスク・並び順は ti_focus_size.py / ti_analysis.py と同一。
+場の作り方・並び順は ti_focus_size.py / ti_analysis.py と同一。
+脳マスクは 2026-10-14（GH #17）に σ 0.33〜0.44 の帯から、Input.h5 の material_name で決めた脳実質 12 組織
+（`brain_by_name.py` と同一）に替えた。旧い帯は腱・靭帯・気管・水晶体が混ざり、小脳・橋・視床が抜けていた。
 """
 import numpy as np
+import h5py
 import s4l_v1.document as document
 
 NAMES = ('tTIS_LF1', 'tTIS_LF2')
@@ -29,6 +32,10 @@ BRAIN_BAND = (0.33, 0.44)
 BOX_MM = 40.0          # ROI 中心まわりの探索箱（半幅）
 PROF_MM = 40.0         # プロファイルの片側長
 TOP_N = 12             # 列挙する局所極大の数
+BRAIN_TISSUES = (
+    'Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_callosum', 'Pons', 'Thalamus',
+    'Medulla_oblongata', 'Hippocampus', 'Midbrain', 'Hypothalamus', 'Pineal_body', 'Commissura_posterior',
+)
 
 
 def get_sim(name):
@@ -54,6 +61,27 @@ def scalar(a):
 
 def emag(a):
     return np.sqrt(np.sum(np.abs(np.asarray(a)) ** 2, axis=1))
+
+
+def voxel_names(sim):
+    """ボクセルの id の配列と、id ごとの組織名（括弧の前）。brain_by_name.py と同一。"""
+    with h5py.File(sim.GetInputFileName(), 'r') as f:
+        mm = f['AllMaterialMaps'][list(f['AllMaterialMaps'].keys())[0]]
+        mesh = None
+        for k in f['Meshes']:
+            if 'voxels' in f['Meshes'][k]:
+                mesh = f['Meshes'][k]; break
+        voxels = mesh['voxels'][...]
+        id_map = mesh['id_map'][...]
+        n = int(voxels.max()) + 1
+        names = np.array(['Background'] * n, dtype=object)
+        for v in range(min(n, id_map.shape[0])):
+            h = bytes(np.asarray(id_map[v], dtype=np.uint8).tolist()).hex()
+            u = '%s-%s-%s-%s-%s' % (h[0:8], h[8:12], h[12:16], h[16:20], h[20:32])
+            if u in mm:
+                nm = mm[u].attrs.get('material_name', '?')
+                names[v] = (nm.decode(errors='replace') if isinstance(nm, bytes) else str(nm)).split('(')[0].strip()
+    return voxels, names
 
 
 # ===== 場（ti_focus_size.py と同一手順）=====
@@ -92,15 +120,20 @@ cx = 0.5 * (xa[:-1] + xa[1:]) * 1000.0
 cy = 0.5 * (ya[:-1] + ya[1:]) * 1000.0
 cz = 0.5 * (za[:-1] + za[1:]) * 1000.0
 ti3 = ti_f.reshape((nx, ny, nz), order='F')
-brain3 = brain_f.reshape((nx, ny, nz), order='F')
+old3 = brain_f.reshape((nx, ny, nz), order='F')
+vox, nm = voxel_names(get_sim(NAMES[0]))
+if vox.shape != ti3.shape:
+    raise SystemExit('[pre ] FAILED — voxels %s と場 %s の形が違う' % (vox.shape, ti3.shape))
+brain3 = np.isin(nm[vox], BRAIN_TISSUES) & material.reshape((nx, ny, nz), order='F')
 vol3 = vol_f.reshape((nx, ny, nz), order='F')
 tin = np.nan_to_num(ti3, nan=-1.0)
 
 ic = int(np.argmin(np.abs(cx - FOCUS_MM[0])))
 jc = int(np.argmin(np.abs(cy - FOCUS_MM[1])))
 kc = int(np.argmin(np.abs(cz - FOCUS_MM[2])))
-print('[chk ] ROI center TI=%.4f V/m σ=%.4f / 脳 %.1f mL （期待 0.2229 / 0.3480 / 945.1）'
-      % (ti3[ic, jc, kc], sigma[ic + nx * (jc + ny * kc)], float(vol3[brain3].sum()) * 1e6))
+print('[chk ] ROI center TI=%.4f V/m σ=%.4f / 脳（12 組織）%.1f mL ／ 旧い σ 帯 %.1f mL （期待 0.2229 / 0.3480 / 1041.5 / 945.1）'
+      % (ti3[ic, jc, kc], sigma[ic + nx * (jc + ny * kc)], float(vol3[brain3].sum()) * 1e6,
+         float(vol3[old3].sum()) * 1e6))
 
 # ===== ① ROI 周辺 ±40mm の箱で局所極大（26近傍）=====
 i0, i1 = int(np.searchsorted(cx, FOCUS_MM[0] - BOX_MM)), int(np.searchsorted(cx, FOCUS_MM[0] + BOX_MM))
@@ -175,6 +208,6 @@ for axname, carr, idx in (('X', cx, 0), ('Y', cy, 1), ('Z', cz, 2)):
     print('  この方向の最大 %.4f V/m at %+.1f mm' % (vals.max(), off[int(np.argmax(vals))]))
 
 print('')
-print('[判定材料] ROI 中心 TI=%.4f / 脳内グローバル最大 TI=%.4f（標的から 96.6mm）'
+print('[判定材料] ROI 中心 TI=%.4f / 脳内グローバル最大 TI=%.4f（延髄・標的から 60.2mm）'
       % (ti3[ic, jc, kc], float(np.max(np.where(brain3, tin, -1.0)))))
 print('=== 5-3b 完了（読み取りのみ・保存していない）===')
