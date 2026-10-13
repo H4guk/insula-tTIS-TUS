@@ -19,7 +19,12 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 - **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-2 -6dB 焦点サイズ）
 - 手順: `docs/reproduce-tus.md`
 
+## 脳の定義の統一（GH #17）
+- `brain_by_name.py`（Input.h5 の `material_name` で決めた脳実質 12 組織で、tTIS・TUS の選択性・到達体積・脳内最大を出し直す。旧い定義と並べて出す。結果は `results/brain_by_name_2026-10-13.txt`）。直す場所の一覧は `docs/brain-mask-fix-inventory.md`
+- `selectivity_by_definition.py`（感度解析: 脳の定義を名前で 3 通り〔12 組織・大脳 GM+WM・大脳 GM のみ〕に振り、両手法で同じ定義の選択性を並べる。`ti_analysis.py`・`tus_selectivity.py` の帯による別定義の置き換え）
+
 ## archive/（一度きり・履歴保存）
+- **#17 調査**: `neuron_offtarget_tissue_probe.py`（tTIS の「脳内 TI 最大点」が腱・靭帯だった確認）`probe_material_names.py`（組織名の在りか＝`material_name`）`list_tissues.py`（両手法の組織一覧と、脳 12 組織の決定）`ti_brain_max_boundary_check.py`（新しい脳での tTIS 最大＝延髄 1 セルが脳の端で跳ねていないか）
 - **調査 probe**: `probe_material_source.py`（tTIS σ）/ `probe_acoustics_api.py` `probe_acoustic_materials.py` `probe_acoustic_sim_api.py` `probe_modeling_api.py` `tus_probe_boundary.py` `tus_field_probe.py`（TUS API・物性・幾何・境界の確定に使用）
 - **使い捨て検証**: `tus_converge_check.py`（Periods 収束）`tus_rigid_transducer.py`（剛体でも不変＝near-field は物理）
 - **回復用（現在は不要）**: `tus_fix_transducer_material.py` ← トランスデューサ材料は `tus_assign_materials.py` に統合済み（2026-08-26 再現確認）。ボクセル化後に材料を足したくなった時の回復手順として残置。
