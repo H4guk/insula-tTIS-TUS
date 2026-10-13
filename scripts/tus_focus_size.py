@@ -3,7 +3,9 @@
 設計値（側方 7.3mm / 軸 61.7mm・F#=1.21 の解析見積り）を、実際の場から測った値に置き換える。
 
 手順:
-  ① 圧力場 |p| と、Input.h5 の voxels→(c, ρ) から作る厳密な脳マスク（tus_selectivity.py と同一定義）
+  ① 圧力場 |p| と、Input.h5 の voxels→material_name から作る脳マスク（脳実質 12 組織・`brain_by_name.py` と同一定義）
+     2026-10-14（GH #17）: 旧い脳（c 1490〜1560・ρ 1035〜1058 の帯）は唾液腺・食道・下垂体が混ざっていたので、組織名に変えた。
+     旧い帯の結果（2.58 mL・側方 16.6/11.2・軸 49.7 mm・ROI 内 41.9%）と比べられるよう、旧い帯の体積も出す
   ② 脳内の |p| ピークを探す（頭皮 near-field の山を除外するため脳内に限定）
   ③ 閾値 = 0.5 * ピーク（-6dB・振幅半分＝強度 1/4。音響の FWHM 相当の標準境界）
   ④ ピークを種にした連結領域（6近傍）を切り出す＝焦点。離れた副極大は数えない
@@ -22,6 +24,10 @@ FOCUS_MM = np.array([99.1, 295.0, 1562.2])    # ROI 中心 [mm]（tTIS と同一
 ROI_R_MM = 10.0
 T7_MM = np.array([94.8, 335.8, 1536.4])       # 頭皮 T7（source 面付近）
 DB = -6.0                                      # 焦点の境界 [dB]
+BRAIN_TISSUES = (
+    'Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_callosum', 'Pons', 'Thalamus',
+    'Medulla_oblongata', 'Hippocampus', 'Midbrain', 'Hypothalamus', 'Pineal_body', 'Commissura_posterior',
+)
 
 sims = [s for s in document.AllSimulations if s.Name == SIM_NAME]
 if len(sims) != 1:
@@ -44,7 +50,7 @@ mag3 = mag.reshape((nx, ny, nz), order='F')
 vol = (np.diff(Xm)[:, None, None] * np.diff(Ym)[None, :, None] * np.diff(Zm)[None, None, :])
 print('[grid] cells %d x %d x %d = %d' % (nx, ny, nz, nx * ny * nz))
 
-# --- ① 脳マスク（voxels -> c, rho）---
+# --- ① 脳マスク（voxels -> material_name。c, rho は確認用）---
 path = sim.GetInputFileName()
 
 
@@ -76,14 +82,18 @@ with h5py.File(path, 'r') as f:
     id_map = mesh['id_map'][...]
     maxv = int(voxels.max())
     lut_c = np.full(maxv + 1, np.nan); lut_r = np.full(maxv + 1, np.nan)
+    lut_n = np.array(['Background'] * (maxv + 1), dtype=object)
     for v in np.unique(voxels):
         u = uuid_hex(id_map[v])
         if u in mm:
             lut_c[v] = prop_by_type(mm[u], 'CSoundSpeed')
             lut_r[v] = prop_by_type(mm[u], 'CMassDensity')
+            nm = mm[u].attrs.get('material_name', '?')
+            lut_n[v] = (nm.decode(errors='replace') if isinstance(nm, bytes) else str(nm)).split('(')[0].strip()
 
 c_grid = lut_c[voxels]; r_grid = lut_r[voxels]
-brain = (c_grid >= 1490) & (c_grid <= 1560) & (r_grid >= 1035) & (r_grid <= 1058)
+brain_old = (c_grid >= 1490) & (c_grid <= 1560) & (r_grid >= 1035) & (r_grid <= 1058)
+brain = np.isin(lut_n[voxels], BRAIN_TISSUES)
 head = (voxels != 0)
 
 # 整合検証（4-6 と同じ数字が出るか）
@@ -92,7 +102,8 @@ jc = int(np.argmin(np.abs(cy - FOCUS_MM[1])))
 kc = int(np.argmin(np.abs(cz - FOCUS_MM[2])))
 print('[chk ] ROI center: c=%.1f rho=%.1f |p|=%.4g Pa (期待 c~1500-1552 / |p|~1.4e6)'
       % (c_grid[ic, jc, kc], r_grid[ic, jc, kc], mag3[ic, jc, kc]))
-print('[chk ] 脳マスク %d cells (%.1f mL)' % (int(brain.sum()), float(vol[brain].sum()) * 1e6))
+print('[chk ] 脳マスク（12 組織）%d cells (%.1f mL・期待 1041.5) ／ 旧い c・ρ 帯 %.1f mL（期待 1091.3）'
+      % (int(brain.sum()), float(vol[brain].sum()) * 1e6, float(vol[brain_old].sum()) * 1e6))
 
 # --- ② 脳内ピーク ---
 mb = np.where(brain, mag3, -1.0)

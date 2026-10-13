@@ -1,5 +1,8 @@
 # 統合版 再現手順（1プロジェクト・3シミュレーション）— #36 5-1
 
+> **2026-10-14 注記（GH #17）**: ここに書かれた選択性・脳マスクの値は、当時の脳の定義（tTIS は σ 0.33〜0.44 の帯・TUS は (c, ρ) の帯）によるもの。帯には脳以外の組織が混ざり、手法ごとに定義も違っていた。現在は両手法とも Input.h5 の組織名で決めた**脳実質 12 組織（1041.5 mL）**で比べている。新旧の値の対応は `brain-mask-fix-inventory.md` §1。この記録は当時の値のまま残す。
+> `tus_focus_size.py`・`ti_local_maxima.py` は 2026-10-14 に脳実質 12 組織へ替えたので、それらの期待値は変わる（TUS -6dB 焦点 2509 mm³・脳 1041.5 mL。`results/tus_focus_size_2026-10-14.txt`・`results/ti_local_maxima_2026-10-14.txt`）。`ti_analysis.py`・`tus_selectivity.py` は帯のままなので下の期待値で検算できる。
+
 **素から作る**。`reproduce.md`（tTIS）と `reproduce-tus.md`（TUS）を1本にまとめ、
 **同一の Yoon-sun 上に tTIS 2ペア ＋ TUS の3シミュレーションを並べる**（`Claude/Decisions/2026-08-25-one-model-two-simulations.md`）。
 
@@ -99,7 +102,7 @@ tTIS sim には Transducer を登録せず、TUS sim には電極を登録しな
 | TUS グリッド | `220 x 212 x 237 = 11.05 MCells` | 工程13 |
 | TUS ROI 中心 \|p\| | **1.26 MPa**（参照1MPa 駆動） | 工程19 |
 | **TUS 選択性（脳broad − ROI）** | **0.198** | 工程19 |
-| TUS -6dB 焦点体積 | **2576 mm³** | `tus_focus_size.py` |
+| TUS -6dB 焦点体積 | **2576 mm³**（分離版・(c, ρ) 帯。2026-10-14 以降の `tus_focus_size.py`〔統合版・12 組織〕では **2509 mm³**） | `tus_focus_size.py` |
 | エンティティ数 / 指紋 | 統合版は **333 個**（tTIS 331 ＋ `Transducer` ＋ `GridBox_TUS`）の見込み | 工程20 |
 
 ⚠️ **tTIS のセル数が 12.289 MCells から変わる可能性**: 統合版では `Transducer` と `GridBox_TUS` が

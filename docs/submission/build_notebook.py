@@ -4,9 +4,9 @@ import json, re, os
 
 ABSTRACT = """Non-invasive access to the insula is a bottleneck for addiction therapy, but the region sits deep and is hard to reach selectively. We compared temporal interference stimulation (tTIS) and transcranial ultrasound stimulation (TUS) on a single head model, each driven at its own clinical safety limit. TUS forms a focus near the target yet delivers only 18% of the level at which ultrasound neuromodulation begins to work; tTIS reaches 76% of its activation threshold but forms no focus at all, the insula lying on a monotonic decay from the electrodes. Focality and depth of reach trade off."""
 
-METHODS = """tTIS and TUS are the two non-invasive candidates that can plausibly reach deep targets, so we compared them directly. Both were built on the same Yoon-sun v3.1 model (26-year-old female) inside one Sim4Life.lite project holding three simulations, so that any difference is attributable to the method rather than to the head. The target was a 10 mm sphere at the left insula (4.19 mL), identical in both. tTIS used montage I (T7-P7 at 2000 Hz, Fp1-Fp2 at 2010 Hz) scaled to 0.891 and 1.109 mA, giving the envelope 2*min(|E1|,|E2|); TUS used a single focused bowl (F# 1.21, 250 kHz) placed at T7 and driven until the global mechanical index reached 1.9. Head tissue was discretised at 1 mm, giving 12.3 and 11.1 million cells. Three quantities were compared: selectivity, defined as non-target over target mean; the brain volume at or above the target level; and the target dose relative to the level at which each method starts working, 0.3 V/m for tTIS and 3 W/cm2 for TUS. The integrated build reproduced separately built projects to within 1% on volume means."""
+METHODS = """tTIS and TUS are the two non-invasive candidates that can plausibly reach deep targets, so we compared them directly. Both were built on the same Yoon-sun v3.1 model (26-year-old female) inside one Sim4Life.lite project holding three simulations, so that any difference is attributable to the method rather than to the head. The target was a 10 mm sphere at the left insula (4.19 mL), identical in both. tTIS used montage I (T7-P7 at 2000 Hz, Fp1-Fp2 at 2010 Hz) scaled to 0.891 and 1.109 mA, giving the envelope 2*min(|E1|,|E2|); TUS used a single focused bowl (F# 1.21, 250 kHz) placed at T7 and driven until the global mechanical index reached 1.9. Head tissue was discretised at 1 mm, giving 12.3 and 11.1 million cells. The brain was defined identically for both methods as the twelve brain-parenchyma tissues of the model, selected by tissue name. Three quantities were compared: selectivity, defined as non-target over target mean; the brain volume at or above the target level; and the target dose relative to the level at which each method starts working, 0.3 V/m for tTIS and 3 W/cm2 for TUS. The integrated build reproduced separately built projects to within 1% on volume means."""
 
-RESULTS = """Selectivity was 0.376 for tTIS and 0.195 for TUS. On the insula plane the two fields differ in kind rather than in degree (Figure 1): the TUS field closes around the target, whereas the tTIS field decays monotonically from the electrode side without forming a maximum. The brain volume at or above the target level was 50.5 mL for tTIS, 12.1 times the ROI, against 8.7 mL for TUS, 2.1 times the ROI (Figure 2). Of that volume, 43% was contiguous with the ROI for tTIS but 74% for TUS, so more than half of the tTIS volume was detached from the target. The strongest point inside the brain was 10.7 times the target level for tTIS and lay 96.6 mm away on the electrode side, whereas for TUS it was 2.8 times the target level and lay 10.3 mm from the target. At their safety limits the ROI volume mean reached 76% of onset for tTIS and 18% for TUS. The fraction of the ROI above onset was 1.5% for tTIS and 0.0% for TUS, the latter amounting to one or two cells (Figure 3)."""
+RESULTS = """Selectivity was 0.358 for tTIS and 0.193 for TUS, TUS remaining 1.6 to 1.85 times more selective under narrower brain definitions. On the insula plane the two fields differ in kind rather than in degree (Figure 1): the TUS field closes around the target, whereas the tTIS field decays monotonically from the electrode side without forming a maximum. The brain volume at or above the target level was 35.9 mL for tTIS, 8.6 times the ROI, against 7.3 mL for TUS, 1.7 times the ROI (Figure 2). Most of it was contiguous with the ROI, 98% for tTIS and 88% for TUS, so the tTIS field spreads as one large region around the target. The strongest point inside the brain was 4.6 times the target level for tTIS, on the surface of the medulla 60 mm away, whereas for TUS it was 2.8 times the target level and lay 10 mm from the target. At their safety limits the ROI volume mean reached 76% of onset for tTIS and 18% for TUS. The fraction of the ROI above onset was 1.5% for tTIS and 0.0% for TUS, the latter amounting to one or two cells (Figure 3)."""
 
 DISCUSSION = """The two methods fail in opposite ways. TUS confines the target-level field to a single region, but the near-field pressure in the scalp fat reaches a mechanical index of 12.8 at reference drive, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA current ceiling itself, yet its field at the target is closer to threshold precisely because the insula sits on a monotonic decay from the electrodes rather than at a focus. The improvement paths therefore differ: multi-pair optimisation to create a focus for tTIS, and larger apertures or phased arrays to spare the scalp for TUS.
 
@@ -32,7 +32,8 @@ print('%-12s %6d %6d' % ('TOTAL', total, 850))
 # ============ notebook を組み立てる ============
 CODE = '''# Target-level reach volume — the number behind Figures 2 and 3.
 # Run inside the Sim4Life project that holds tTIS_LF1, tTIS_LF2 and TUS_250k.
-# Full scripts: https://github.com/H4guk/insula-tTIS-TUS  (scripts/reach_volume.py)
+# Full scripts: https://github.com/H4guk/insula-tTIS-TUS  (scripts/brain_by_name.py)
+# brain3 = the twelve brain-parenchyma tissues, picked by material_name in Input.h5 (same for both methods).
 
 import numpy as np, s4l_v1.document as document
 
@@ -50,7 +51,7 @@ def reach(field3, brain3, roi3, vol3):
 # tTIS: TI = 2*min(s1|E1|, s2|E2|); the current scaling cannot be skipped because
 # min() is non-linear, so the two pairs must be scaled before they are combined.
 # TUS: |p| straight from the acoustic solver.
-# -> tTIS 50.5 mL (12.1x ROI, 5.3% of the brain) / TUS 8.7 mL (2.1x ROI, 0.8%)
+# -> tTIS 35.9 mL (8.6x ROI, 3.45% of the brain) / TUS 7.3 mL (1.7x ROI, 0.70%)
 '''
 
 FIG_CAPS = [
@@ -61,8 +62,8 @@ FIG_CAPS = [
      "target; tTIS does not."),
     ("figures/fig3_reach_volume.png",
      "**Figure 2** Brain volume at or above the target level. Solid: contiguous with the ROI. "
-     "Hatched: detached. Dashed line: ROI volume (4.19 mL). More than half of the tTIS volume is "
-     "detached from the target."),
+     "Hatched: detached. Dashed line: ROI volume (4.19 mL). Almost all of the tTIS volume is "
+     "contiguous with the target but 8.6 times the ROI; the TUS volume stays within 1.7 times."),
     ("figures/fig2_dose_vs_threshold.png",
      "**Figure 3** Target dose relative to the onset of efficacy (1.0 = onset). Open circle: ROI "
      "volume mean. Filled: ROI maximum, i.e. the single strongest cell. The long TUS line shows "

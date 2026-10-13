@@ -1,7 +1,9 @@
 """#36 5-6 図の生成（ローカル実行・Sim4Life 不要）。
 
 統合版（1プロジェクト・3シミュレーション）の確定値から、提出物用の図を作る。
-数値の出所は docs/comparison-table.md §5。
+数値の出所は docs/comparison-table.md §2。
+2026-10-14（GH #17）: 脳を脳実質 12 組織（両手法共通）にして選択性と Fig.3 を出し直した（`results/brain_by_name_2026-10-13.txt`）。
+Fig.2 は ROI だけで決まる量なので変わらない。
 
   Fig.1  selectivity          選択性（非標的/標的・小さいほど良い）＋ Inoue 2025 参照線
   Fig.2  dose_vs_threshold    標的線量 / 効き始めるライン（1.0 = 閾値）
@@ -82,7 +84,7 @@ def save(fig, name):
 # ===== Fig.1 選択性 =====
 fig, ax = base_axes()
 labels = ['tTIS', 'TUS']
-vals = [0.3758, 0.1949]
+vals = [0.3576, 0.1929]
 bars = ax.barh(labels, vals, height=0.5, color=[TTIS, TUS])
 refline(ax, 0.40, 'Inoue 2025 ≈ 0.40', ha='right')
 for b, v in zip(bars, vals):
@@ -130,8 +132,8 @@ save(fig, 'fig2_dose_vs_threshold')
 # ===== Fig.3 標的レベル以上が及ぶ脳体積（内訳つき）=====
 fig, ax = base_axes(figsize=(7.6, 3.1))
 labels = ['tTIS', 'TUS']
-contig = [21.9, 6.4]                 # ROI と地続き
-island = [50.5 - 21.9, 8.7 - 6.4]    # 飛び地
+contig = [35.3, 6.4]                 # ROI と地続き
+island = [35.9 - 35.3, 7.3 - 6.4]    # 飛び地
 colors = [TTIS, TUS]
 for i, (lab, c, isl, col) in enumerate(zip(labels, contig, island, colors)):
     ax.barh(i, c, height=0.5, color=col)
@@ -140,11 +142,11 @@ for i, (lab, c, isl, col) in enumerate(zip(labels, contig, island, colors)):
 ax.set_yticks([0, 1])
 ax.set_yticklabels(labels)
 ax.axvline(4.186, color=MUTED, linestyle='--', linewidth=1.2)
-ax.text(50.5 + 1.5, 0, '50.5 mL   12.1× ROI', va='center', ha='left', fontsize=12, color=INK)
-ax.text(8.7 + 1.5, 1, '8.7 mL   2.1× ROI', va='center', ha='left', fontsize=12, color=INK)
-ax.text(21.9 / 2, 0, '43 % contiguous', va='center', ha='center', fontsize=10, color='white')
-ax.text(6.4 / 2, 1, '74 %', va='center', ha='center', fontsize=10, color='white')
-ax.set_xlim(0, 72)
+ax.text(35.9 + 1.0, 0, '35.9 mL   8.6× ROI', va='center', ha='left', fontsize=12, color=INK)
+ax.text(7.3 + 1.0, 1, '7.3 mL   1.7× ROI', va='center', ha='left', fontsize=12, color=INK)
+ax.text(35.3 / 2, 0, '98 % contiguous', va='center', ha='center', fontsize=10, color='white')
+ax.text(6.4 / 2, 1, '88 %', va='center', ha='center', fontsize=10, color='white')
+ax.set_xlim(0, 50)
 ax.set_xlabel('brain volume at or above the target level [mL]\n'
               'solid = contiguous with the ROI · hatched = detached · dashed = ROI volume (4.19 mL)')
 ax.set_title('TUS confines the target-level field; tTIS does not',
