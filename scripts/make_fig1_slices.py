@@ -8,7 +8,9 @@
            X 成分がほぼゼロなのでこの面がビーム経路をほぼ含み、T7 電極（X=94.8）も近い。
   ★正規化: 両パネルとも「**標的レベル（ROI 内の体積重み平均）の何倍か**」にする。
            単位の違う場（V/m と Pa）が**同じ無次元スケール**で並び、カラーバーを共通にできる。
-           **1.0 の等値線 = 標的と同じ強さの境界** ＝ Figure 2（reach volume）の 50.5 / 8.7 mL に対応。
+           **1.0 の等値線 = 標的と同じ強さの境界** ＝ Figure 2（reach volume）の 35.9 / 7.3 mL に対応。
+  脳    : 2026-10-14（GH #17）に σ 帯・(c,ρ) 帯から、Input.h5 の material_name で決めた脳実質 12 組織（両手法共通）に替えた。
+           脳の輪郭と脳の外の減光だけが変わる（標的レベルは ROI が 100% 脳なので同じ）。
   色     : 手法ごとの sequential（tTIS=blue / TUS=orange）。more-is-darker。vmax=4 で線形。
   重ねる : ROI 円（r=10mm・破線）／1.0 の等値線／脳の輪郭（薄いグレー）
 
@@ -40,7 +42,10 @@ LOSS_TO_I = 2.0
 DRIVE_V = 1.0
 E_KEY = 'EM E(x,y,z,f0)'
 LOSS_KEY = 'El. Loss Density(x,y,z,f0)'
-BRAIN_BAND = (0.33, 0.44)
+BRAIN_TISSUES = (
+    'Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_callosum', 'Pons', 'Thalamus',
+    'Medulla_oblongata', 'Hippocampus', 'Midbrain', 'Hypothalamus', 'Pineal_body', 'Commissura_posterior',
+)
 TUS_NAME = 'TUS_250k'
 
 SURFACE = '#fcfcfb'; INK = '#0b0b0b'; INK2 = '#52514e'; MUTED = '#8a8983'
@@ -92,7 +97,7 @@ def roi_mask(cx, cy, cz):
             + (cz[None, None, :] - FOCUS_MM[2]) ** 2) <= ROI_R_MM ** 2
 
 
-# ============ tTIS: TI 包絡（スケール込み）と σ 脳マスク ============
+# ============ tTIS: TI 包絡（スケール込み）============
 mags, scales, fd0 = [], [], None
 for name, tgt in zip(TI_NAMES, I_TARGET_MA):
     sim = get_sim(name)
@@ -111,22 +116,12 @@ for name, tgt in zip(TI_NAMES, I_TARGET_MA):
 e1 = scales[0] * mags[0]; e2 = scales[1] * mags[1]
 material = np.isfinite(e1) & np.isfinite(e2)
 ti_f = np.where(material, 2.0 * np.minimum(np.nan_to_num(e1), np.nan_to_num(e2)), np.nan)
-sigma = np.full(mag0.shape, np.nan)
-ok = np.isfinite(mag0) & np.isfinite(loss0) & (mag0 > 0)
-sigma[ok] = 2.0 * loss0[ok] / (mag0[ok] ** 2)
-brain_f = np.isfinite(sigma) & (sigma >= BRAIN_BAND[0]) & (sigma <= BRAIN_BAND[1]) & material
 
 nx, ny, nz = xa.size - 1, ya.size - 1, za.size - 1
 tcx, tcy, tcz = cells(xa, ya, za)
 ti3 = ti_f.reshape((nx, ny, nz), order='F')
-tb3 = brain_f.reshape((nx, ny, nz), order='F')
 tv3 = vol_f.reshape((nx, ny, nz), order='F')
-tr3 = roi_mask(tcx, tcy, tcz)
-m = tr3 & tb3
-ti_ref = float((np.nan_to_num(ti3)[m] * tv3[m]).sum() / tv3[m].sum())
-print('[tTIS] 標的レベル（ROI 体積重み平均 TI）= %.4f V/m （期待 0.2265）' % ti_ref)
-
-# ============ TUS: |p| と (c,rho) 脳マスク ============
+# ============ TUS: |p| ============
 sim = get_sim(TUS_NAME)
 pd = field(sim, 'p(x,y,z,f)')
 pmag = np.abs(np.asarray(pd.Field(0))).ravel()
@@ -137,40 +132,41 @@ p3 = pmag.reshape((nx2, ny2, nz2), order='F')
 uv3 = vol_of(xa2, ya2, za2)
 
 
-def uuid_hex(row):
-    h = bytes(np.asarray(row, dtype=np.uint8).tolist()).hex()
-    return '%s-%s-%s-%s-%s' % (h[0:8], h[8:12], h[12:16], h[16:20], h[20:32])
+def voxel_names(sim):
+    """ボクセルの id の配列と、id ごとの組織名（括弧の前）。brain_by_name.py と同一。"""
+    with h5py.File(sim.GetInputFileName(), 'r') as f:
+        mm = f['AllMaterialMaps'][list(f['AllMaterialMaps'].keys())[0]]
+        mesh = None
+        for k in f['Meshes']:
+            if 'voxels' in f['Meshes'][k]:
+                mesh = f['Meshes'][k]; break
+        voxels = mesh['voxels'][...]; id_map = mesh['id_map'][...]
+        n = int(voxels.max()) + 1
+        names = np.array(['Background'] * n, dtype=object)
+        for v in range(min(n, id_map.shape[0])):
+            h = bytes(np.asarray(id_map[v], dtype=np.uint8).tolist()).hex()
+            u = '%s-%s-%s-%s-%s' % (h[0:8], h[8:12], h[12:16], h[16:20], h[20:32])
+            if u in mm:
+                nm = mm[u].attrs.get('material_name', '?')
+                names[v] = (nm.decode(errors='replace') if isinstance(nm, bytes) else str(nm)).split('(')[0].strip()
+    return voxels, names
 
 
-def prop_by_type(mat, tn):
-    tnb = tn.encode() if isinstance(tn, str) else tn
-    for pk in mat.keys():
-        grp = mat[pk]
-        ci = grp.get('_ClassInfo') if hasattr(grp, 'get') else None
-        if ci is not None and ci.attrs.get('_TypeName') == tnb:
-            try:
-                return float(grp['_Object'].attrs['Value'])
-            except Exception:
-                return np.nan
-    return np.nan
+vox2, nm2 = voxel_names(sim)
+if vox2.shape != p3.shape:
+    raise SystemExit('[TUS ] FAILED — voxels %s と場 %s の形が違う' % (vox2.shape, p3.shape))
+ub3 = np.isin(nm2[vox2], BRAIN_TISSUES)
+vox, nm = voxel_names(get_sim(TI_NAMES[0]))
+if vox.shape != ti3.shape:
+    raise SystemExit('[tTIS] FAILED — voxels %s と場 %s の形が違う' % (vox.shape, ti3.shape))
+tb3 = np.isin(nm[vox], BRAIN_TISSUES) & material.reshape((nx, ny, nz), order='F')
+print('[mask] 脳（12 組織）tTIS %.1f mL ・ TUS %.1f mL （期待 1041.5 / 1041.5）'
+      % (float(tv3[tb3].sum()) * 1e6, float(uv3[ub3].sum()) * 1e6))
+tr3 = roi_mask(tcx, tcy, tcz)
+m = tr3 & tb3
+ti_ref = float((np.nan_to_num(ti3)[m] * tv3[m]).sum() / tv3[m].sum())
+print('[tTIS] 標的レベル（ROI 体積重み平均 TI）= %.4f V/m （期待 0.2265）' % ti_ref)
 
-
-with h5py.File(sim.GetInputFileName(), 'r') as f:
-    mm = f['AllMaterialMaps'][list(f['AllMaterialMaps'].keys())[0]]
-    mesh = None
-    for k in f['Meshes']:
-        if 'voxels' in f['Meshes'][k]:
-            mesh = f['Meshes'][k]; break
-    voxels = mesh['voxels'][...]; id_map = mesh['id_map'][...]
-    lut_c = np.full(int(voxels.max()) + 1, np.nan); lut_r = np.full(int(voxels.max()) + 1, np.nan)
-    for v in np.unique(voxels):
-        u = uuid_hex(id_map[v])
-        if u in mm:
-            lut_c[v] = prop_by_type(mm[u], 'CSoundSpeed')
-            lut_r[v] = prop_by_type(mm[u], 'CMassDensity')
-
-c3 = lut_c[voxels]; r3 = lut_r[voxels]
-ub3 = (c3 >= 1490) & (c3 <= 1560) & (r3 >= 1035) & (r3 <= 1058)
 ur3 = roi_mask(ucx, ucy, ucz)
 mu = ur3 & ub3
 p_ref = float((p3[mu] * uv3[mu]).sum() / uv3[mu].sum())
