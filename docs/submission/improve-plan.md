@@ -99,7 +99,9 @@ hard to reach selectively.」＝**背景としては正しいが、新規性が�
 "tTIS comes closer to its effective range: at the lower end of each range it covers 74.5% of the ROI against none for TUS, while at the midpoint neither reaches it" に変えた。
 **Abstract と Discussion でも「有効範囲の下端」という限定を明示**する。
 
-### ★3.7. 味覚再現の観点での結論を1文入れる（基準①）
+### ~~★3.7. 味覚再現の観点での結論を1文入れる（基準①）~~ — 2026-10-15 取り下げ
+
+> 背景は依存症で、味の質の再現は比較の軸から外した（多点・時間パターンは装置の能力で、今回測っていない）。味覚は Discussion の将来展望で1文触れるだけにする。以下は当時の案として残す。
 
 **味覚再現を目的に固定すると優劣がつく＝TUS。** Discussion の Level 2 段に1文。
 

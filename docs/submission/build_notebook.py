@@ -10,11 +10,11 @@ RESULTS = """Selectivity was 0.358 for tTIS and 0.193 for TUS, TUS remaining 1.6
 
 DISCUSSION = """The two methods fail in opposite ways. TUS confines the target-level field to a single region, but the near-field pressure in the scalp fat reaches a mechanical index of 12.8 at reference drive, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA current ceiling itself, yet its field at the target is closer to its effective range precisely because the insula sits on a monotonic decay from the electrodes rather than at a focus. The improvement paths therefore differ: multi-pair optimisation to create a focus for tTIS, and larger apertures or phased arrays to spare the scalp for TUS.
 
-Reproducing taste, the longer-term motivation for targeting the insula, is out of reach for both. Taste quality is carried by a distributed population code rather than a spatial map, so a single focus cannot address it however sharp it becomes.
+The insula is also the primary taste cortex; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
 
 One model, a spherical ROI and uniform bone without CT limit these numbers. No statistical confidence interval follows from a single head; instead we measured reproducibility against a separate build, finding volume means within 1% and single cells varying by 6 to 7%."""
 
-CONCLUSIONS = """On one head model, with each method at its own safety limit, four things follow. First, the difference in focality is not one of size but of whether a focus exists at all: TUS forms one, tTIS does not. Second, tTIS comes closer to its effective range: at the lower end of each range it covers 74.5% of the ROI against none for TUS, while at the midpoint neither reaches it. Third, focality and depth of reach trade off, giving a well focused but weak TUS against an unfocused but stronger tTIS, and because the limiting mechanism differs the two need different fixes. Fourth, neither can reproduce taste quality, since a single focus cannot address a distributed population code."""
+CONCLUSIONS = """On one head model, with each method at its own safety limit, three things follow. First, the difference in focality is not one of size but of whether a focus exists at all: TUS forms one, tTIS does not. Second, tTIS comes closer to its effective range: at the lower end of each range it covers 74.5% of the ROI against none for TUS, while at the midpoint neither reaches it. Third, focality and depth of reach trade off, giving a well focused but weak TUS against an unfocused but stronger tTIS, and because the limiting mechanism differs the two need different fixes."""
 
 def wc(t):
     t = re.sub(r'\s+', ' ', t).strip()
