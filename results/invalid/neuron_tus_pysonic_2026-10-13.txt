@@ -1,0 +1,14 @@
+# scripts/neuron_tus_pysonic.py の出力（2026-10-13・計算 約37秒）
+# 入力の音圧は scripts/neuron_tus_site_pressure.py（Sim4Life TUS_250k・MI<1.9 の安全駆動 k=0.15580）
+#   target    cell (99.5, 294.5, 1562.5) ref 1317.89 kPa -> safe 205.33 kPa (3x3x3: 151.72 - 235.29)
+#   offtarget cell (48.5, 274.5, 1482.5) ref   39.06 kPa -> safe   6.09 kPa (3x3x3:   1.18 -  16.77)
+lookup A (kPa): 0.0 .. 600.0
+threshold (250 kHz, 100 ms CW): 38.45 kPa
+
+site          A [kPa]   spikes     factor
+target         205.33       51      0.187  (cell)
+target         151.72       45      0.253  (min)
+target         235.29       53      0.163  (max)
+offtarget        6.09        0      6.314  (cell)
+offtarget        1.18        0     32.587  (min)
+offtarget       16.77        0      2.293  (max)

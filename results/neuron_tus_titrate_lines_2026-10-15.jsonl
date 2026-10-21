@@ -1,0 +1,15 @@
+# scripts/neuron_tus_titrate_lines.py の出力（1 行 1 件・JSON）。10/15 に 12 件（7 並列）、残る Sundt の offA_x・offB_y は 10/16 に 1 件ずつ回し直した（10/15 はメモリ不足で停止）
+{"fiber": "mrg16", "line": "offA_y", "pmax_kPa": 24.73, "thr_kPa": 118.184, "factor": 4.779, "nsec": 67, "sec": 94.2}
+{"fiber": "mrg16", "line": "offB_y", "pmax_kPa": 15.81, "thr_kPa": 147.129, "factor": 9.3061, "nsec": 67, "sec": 103.2}
+{"fiber": "mrg16", "line": "target_x", "pmax_kPa": 213.74, "thr_kPa": 107.988, "factor": 0.5052, "nsec": 67, "sec": 109.4}
+{"fiber": "mrg16", "line": "target_y", "pmax_kPa": 250.89, "thr_kPa": 108.164, "factor": 0.4311, "nsec": 67, "sec": 112.6}
+{"fiber": "mrg16", "line": "offA_x", "pmax_kPa": 22.03, "thr_kPa": 108.809, "factor": 4.9391, "nsec": 67, "sec": 121.3}
+{"fiber": "mrg16", "line": "offA_z", "pmax_kPa": 12.32, "thr_kPa": 108.867, "factor": 8.8366, "nsec": 67, "sec": 129.2}
+{"fiber": "mrg16", "line": "target_z", "pmax_kPa": 221.62, "thr_kPa": 108.867, "factor": 0.4912, "nsec": 67, "sec": 141.2}
+{"fiber": "sundt", "line": "target_x", "pmax_kPa": 213.74, "thr_kPa": 25.781, "factor": 0.1206, "nsec": 456, "sec": 1807.1}
+{"fiber": "sundt", "line": "target_z", "pmax_kPa": 221.62, "thr_kPa": 25.781, "factor": 0.1163, "nsec": 456, "sec": 1895.9}
+{"fiber": "sundt", "line": "target_y", "pmax_kPa": 250.89, "thr_kPa": 25.781, "factor": 0.1028, "nsec": 456, "sec": 2012.8}
+{"fiber": "sundt", "line": "offA_z", "pmax_kPa": 12.32, "thr_kPa": 25.84, "factor": 2.0974, "nsec": 456, "sec": 2457.6}
+{"fiber": "sundt", "line": "offA_y", "pmax_kPa": 24.73, "thr_kPa": 120.234, "factor": 4.8619, "nsec": 456, "sec": 4445.7}
+{"fiber": "sundt", "line": "offB_y", "pmax_kPa": 15.81, "thr_kPa": 38.203, "factor": 2.4164, "nsec": 456, "sec": 11224.0}
+{"fiber": "sundt", "line": "offA_x", "pmax_kPa": 22.03, "thr_kPa": 26.367, "factor": 1.1969, "nsec": 456, "sec": 5580.2}
