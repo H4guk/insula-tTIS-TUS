@@ -19,9 +19,13 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 - **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-2 -6dB 焦点サイズ）
 - 手順: `docs/reproduce-tus.md`
 
-## 神経レベル比較（Phase 6・GH #16）
-- **tTIS**: `neuron_ti_create.py`（Neuron sim `TI_Neuron` を作り `tTIS_LF1`/`LF2` の場をつなぐ）→ `neuron_ti_place_axons.py`（標的・標的外に MRG 軸索を3方向ずつ・計6本）→ `neuron_ti_read_titration.py`（Titration の倍率を読む。結果は `results/neuron_ti_titration_2026-10-13.json`）。神経を設定に入れるのは GUI のドラッグ
-- **TUS**: `neuron_tus_site_pressure.py`（Sim4Life・2か所の |p| を MI<1.9 駆動で）→ `neuron_tus_pysonic.py`（**ローカル** PySONIC・RS 神経 250 kHz 100 ms・閾値と倍率。結果は `results/neuron_tus_pysonic_2026-10-13.txt`）
+## 神経レベル比較（Phase 6・GH #16・L2）
+手順と結果は `docs/phase6-neuron.md`。表は `neuron_l2_table.py`（ローカル）→ `results/neuron_l2_table_2026-10-21.md`。
+- **標的外の選び方**: `neuron_offtarget_search.py`（10 mm の線が脳に収まる点のうち TI 最大＝標的外 A・B）
+- **tTIS（Sim4Life）**: `neuron_ti_create.py`（`TI_Neuron` を作り `tTIS_LF1`/`LF2` の場をつなぐ。**Source Settings 1 が 2010 Hz かを GUI で確かめる**）→ `neuron_ti_place_l2_mrg16.py` / `neuron_ti_place_l2_sundt.py`（7 本ずつ。神経を設定に入れるのは GUI のドラッグ）→ `neuron_ti_ramp_setup.py`（ランプ付きの波形・PulseType Vectors・Duration 260 ms）→ `neuron_ti_read_titration_l2.py`（倍率を読む）
+- **TUS（Sim4Life → ローカル MorphoSONIC）**: `neuron_tus_line_pressure2.py`（Sim4Life・7 本の線上の |p| と組織）→ `neuron_tus_profile_source.py`（線上の音圧を区画ごとに与える音源）→ `neuron_tus_titrate_lines.py`（**ローカル**・MRG 16 µm / Sundt の titration）
+- **実装の突き合わせ（IClamp）**: `neuron_iclamp_morpho.py`（ローカル）／`neuron_iclamp_sweep_setup.py` → `neuron_iclamp_set_amps.py` → `neuron_iclamp_read.py`（Sim4Life。`neuron_iclamp_check.py` で今の設定を表示）
+- 無効にした結果（1 回目・2000 Hz の不具合）は `results/invalid/`（README つき）
 
 ## 脳の定義の統一（GH #17）
 - `brain_by_name.py`（Input.h5 の `material_name` で決めた脳実質 12 組織で、tTIS・TUS の選択性・到達体積・脳内最大を出し直す。旧い定義と並べて出す。結果は `results/brain_by_name_2026-10-13.txt`）。直す場所の一覧は `docs/brain-mask-fix-inventory.md`
@@ -29,6 +33,8 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 
 ## archive/（一度きり・履歴保存）
 - **#16 関門（tutorial）**: `neuron_tutorial_beat_check.py`（2000/2010 Hz の Source から 10 Hz のうなり）`neuron_tutorial_limit_probe.py`（Lite の神経上限 10 本） `neuron_morpho_gate.py`（MorphoSONIC の MRG に超音波・電気をかける関門。環境構築の手順も先頭に）
+- **#16 1 回目（10-13・無効）**: `neuron_ti_place_axons.py` `neuron_ti_read_titration.py` `neuron_tus_site_pressure.py` `neuron_tus_pysonic.py`（RS 点神経） `neuron_tus_line_pressure.py`（旧い 6 本） `neuron_ti_place_offtarget2.py`（L2 前の MRG 20 µm）
+- **#16 L2 の調査**: `neuron_offtarget_line_fit.py`（脳内 TI 最大に軸索が収まらない確認） `neuron_ti_props_probe.py` `neuron_ti_props_probe2.py`（軸索の形の項目） `neuron_tus_profile_gate.py`（自作の音源の関門） `neuron_iclamp_probe.py` `neuron_iclamp_probe2.py` `neuron_iclamp_create.py` `neuron_iclamp_titration_off.py`（IClamp の API と、Titration が外部 Source 無しで動かないこと） `neuron_ramp_probe.py`（Source の波形の項目・2000 Hz の不具合の発見） `neuron_ramp_vector_probe.py`（Vectors の値はタプルで入る）
 - **#17 調査**: `neuron_offtarget_tissue_probe.py`（tTIS の「脳内 TI 最大点」が腱・靭帯だった確認）`probe_material_names.py`（組織名の在りか＝`material_name`）`list_tissues.py`（両手法の組織一覧と、脳 12 組織の決定）`ti_brain_max_boundary_check.py`（新しい脳での tTIS 最大＝延髄 1 セルが脳の端で跳ねていないか）
 - **調査 probe**: `probe_material_source.py`（tTIS σ）/ `probe_acoustics_api.py` `probe_acoustic_materials.py` `probe_acoustic_sim_api.py` `probe_modeling_api.py` `tus_probe_boundary.py` `tus_field_probe.py`（TUS API・物性・幾何・境界の確定に使用）
 - **使い捨て検証**: `tus_converge_check.py`（Periods 収束）`tus_rigid_transducer.py`（剛体でも不変＝near-field は物理）
