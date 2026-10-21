@@ -4,9 +4,10 @@
 数値の出所は docs/comparison-table.md §2。
 2026-10-14（GH #17）: 脳を脳実質 12 組織（両手法共通）にして選択性と Fig.3 を出し直した（`results/brain_by_name_2026-10-13.txt`）。
 Fig.2 は ROI だけで決まる量なので変わらない。
+2026-10-20（GH #19）: Fig.2 の目安を両手法とも文献の有効範囲の下端（0.2 V/m・3 W/cm²）にし、TUS は振幅に直した（√(ISPPA/3)）。
 
   Fig.1  selectivity          選択性（非標的/標的・小さいほど良い）＋ Inoue 2025 参照線
-  Fig.2  dose_vs_threshold    標的線量 / 効き始めるライン（1.0 = 閾値）
+  Fig.2  dose_vs_threshold    標的の強さ / 有効範囲の下端（振幅・1.0 = 下端）
   Fig.3  reach_volume         標的レベル以上が及ぶ脳体積（地続き / 飛び地の内訳つき）
 
 設計（dataviz スキル準拠）:
@@ -96,13 +97,15 @@ ax.set_title('Selectivity in the brain', loc='left', fontsize=13, pad=22)
 ax.invert_yaxis()
 save(fig, 'fig1_selectivity')
 
-# ===== Fig.2 標的線量 / 効き始めるライン（dumbbell）=====
+# ===== Fig.2 標的の強さ / 有効範囲の下端（dumbbell）=====
 # ★旧版は tTIS の「ROI 平均」と TUS の「ROI 最大」を並べていた（2026-08-28 に発覚）。
 #   統計量を揃えると評価が変わるので、**平均と最大の両方を1本の線で示す**形にした。
+# ★GH #19: 目安は両手法とも有効範囲の下端。量は振幅にそろえる（ISPPA ∝ p² なので TUS は √）。
+#   下端超えの ROI 割合は results/ti_roi_threshold_fraction_2026-10-20.txt（tTIS）・tus_safety_drive.py（TUS）。
 fig, ax = base_axes(figsize=(7.6, 3.1))
 rows = [
-    ('tTIS', 0.2265 / 0.30, 0.3259 / 0.30, 1.5, TTIS),
-    ('TUS',  0.531 / 3.0,   3.13 / 3.0,    0.0, TUS),
+    ('tTIS', 0.2265 / 0.2,          0.3259 / 0.2,         74.5, TTIS),
+    ('TUS',  (0.531 / 3.0) ** 0.5,  (3.13 / 3.0) ** 0.5,  0.0,  TUS),
 ]
 for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.plot([mean, mx], [i, i], color=col, linewidth=2.5, solid_capstyle='round', zorder=2)
@@ -112,20 +115,21 @@ for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.text(mean, i - 0.30, '%.0f %%' % (100 * mean), ha='center', va='bottom',
             fontsize=11, color=INK)
     ax.text(mx, i - 0.30, '%.0f %%' % (100 * mx), ha='center', va='bottom',
-            fontsize=11, color=INK)
-    ax.text(1.32, i, 'above onset in %.1f %% of the ROI' % frac,
+            fontsize=11, color=INK,
+            bbox=dict(facecolor=SURFACE, edgecolor='none', pad=1))  # 1.0 の破線に重なっても読める
+    ax.text(1.82, i, 'above onset in %.1f %% of the ROI' % frac,
             ha='left', va='center', fontsize=10, color=INK2)
 ax.set_yticks([0, 1]); ax.set_yticklabels([r[0] for r in rows])
 ax.axvline(1.0, color=MUTED, linestyle='--', linewidth=1.2)
 ax.annotate('onset of efficacy', xy=(1.0, 1.0), xycoords=('data', 'axes fraction'),
             xytext=(0, 6), textcoords='offset points',
             ha='right', va='bottom', fontsize=9, color=INK2)
-ax.set_xlim(0, 2.05)
-ax.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0, 1.25])   # データ域だけ目盛る（右は注記の場所）
+ax.set_xlim(0, 2.6)
+ax.set_xticks([0.0, 0.5, 1.0, 1.5])   # データ域だけ目盛る（右は注記の場所）
 ax.set_ylim(1.6, -0.6)
-ax.set_xlabel('target dose / efficacy onset   (1.0 = onset)\n'
+ax.set_xlabel('target amplitude / lower end of the effective range   (1.0 = onset)\n'
               'open circle = ROI volume mean · filled = ROI maximum (single strongest cell)')
-ax.set_title('Neither method reaches efficacy; tTIS gets closer',
+ax.set_title('At the lower onset, tTIS covers most of the ROI; TUS does not',
              loc='left', fontsize=13, pad=22)
 save(fig, 'fig2_dose_vs_threshold')
 

@@ -9,7 +9,7 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 - **比較（5-2/5-3 測り直し）**: `reach_volume.py`（標的レベル以上が及ぶ脳体積・両手法を1回で）
 - **図（5-6）**: `make_figures.py`（ローカル・Fig.2/3）`make_fig1_slices.py`（**Sim4Life 側で実行**・Fig.1 場スライス）`probe_slice_export.py`（環境確認）
 - **統合（5-1）**: `probe_cell_limit.py`（セル上限が合計制か判定） `probe_geometry_match.py`（5-1b 両プロジェクトのジオメトリ突き合わせ） `probe_transducer_pose.py`（5-1g トランスデューサ設置点の高精度比較）
-- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-3 -6dB 焦点サイズ） `ti_local_maxima.py`（5-3b 焦点の有無＝局所極大とプロファイル）
+- **解析・監査**: `ti_analysis.py`（TI・選択性）`current_scale.py` `sigma_map.py` `verify_grid_order.py` `audit_materials.py` `ti_focus_size.py`（5-3 -6dB 焦点サイズ） `ti_local_maxima.py`（5-3b 焦点の有無＝局所極大とプロファイル） `ti_roi_threshold_fraction.py`（GH #19 深部到達②: TI が 0.2 / 0.3 / 0.35 V/m を超える ROI 体積の割合）
 - 手順: `docs/reproduce.md`
 
 ## TUS（Phase 4）
