@@ -8,6 +8,12 @@
   - SONIC の lookup `MRGnode_lookups_fs1.00.pkl`（26.6 MB）は Git LFS なので media URL から取り、sha256 b9b9789f… を照合
     lookup の周波数は 20k / 100k / 500k / 1M / 2M / 3M / 4M Hz で、250 kHz は 100k と 500k の間の補間になる（RS も同じ）
 
+再構築（2026-10-18）: scratchpad（/private/tmp）が macOS に消されたので、消えない場所に作り直した
+  - ソース ~/src/insula-sonic/{PySONIC,MorphoSONIC}（git-lfs 無しで clone）、環境 ~/envs/insula-sonic（conda -p・Python 3.11）
+  - neuron 9.0.2・pandas 2.1.4・numpy 1.26.4・matplotlib<3.9・colorlog・multiprocess・seaborn
+  - lookup は MRGnode（b9b9789f…）と SUseg（a4889eba…）を media URL から取り sha256 照合
+  - 確認: `~/envs/insula-sonic/bin/python scripts/neuron_tus_titrate_lines.py mrg16 target_x` → thr 107.988 kPa・factor 0.5052（10/15 と同じ値）
+
 結果:
   - MRGFiber(20 µm, 6 節): 節の間隔 1.700 mm・長さ 8.501 mm・36 °C
     Sim4Life の Motor MRG 20 µm も節の間隔は約 1.7 mm（offtarget_x の node[5] が x = 52.296 mm、線の始点 43.5 mm）で一致。
