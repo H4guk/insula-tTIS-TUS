@@ -8,11 +8,12 @@
   tutorial と違い、ペアごとに別の場をつなぐ（うなりの深さが場所ごとに変わる＝TI の本体）。
 
 波形（2000 / 2010 Hz の Sinusoidal）と振幅（電流のスケール）は GUI の Source 設定で別に入れる。
+**Source Settings 1 の周波数が 2010 Hz になっているかを必ず確かめる**（2026-10-18: 2000 Hz のままで、TI ではなく 2 kHz の刺激になっていた・docs/phase6-neuron.md §6）。
 
 API の注意（2026-10-13 に確認）:
   - Source は `sim.AddSource(em_sim, "Overall Field")` で EM とつながる（GUI のドラッグではつながらない）。
   - 神経の設定は `sim.Add(設定, [エンティティ])` だと型によらず `incompatible with this type of simulation`
-    で失敗する。神経は GUI のドラッグで設定に入れる（`neuron_ti_place_axons.py`）。
+    で失敗する。神経は GUI のドラッグで設定に入れる（`archive/neuron_ti_place_axons.py`）。
 
 結果（2026-10-13）: `created: Simulation | TI_Neuron` / `source linked: tTIS_LF1` / `source linked: tTIS_LF2`
 """
