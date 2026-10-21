@@ -1,0 +1,22 @@
+# #16 L2 ④ IClamp 突き合わせ（Sim4Life 側・IClamp_Neuron・Titration off・40 ms・dt 0.0025 ms・中央に 0.1 ms の IClamp・遅れ 5 ms）
+# 倍率は MorphoSONIC の閾値（MRG 1.455 nA・Sundt 0.715 nA、scripts/neuron_iclamp_morpho.py）に対するもの。Action Potential Sensor で判定。
+# Run 1
+ic_m16_080 1.1640 nA  no spike
+ic_m16_090 1.3095 nA  no spike
+ic_m16_100 1.4550 nA  no spike
+ic_m16_110 1.6005 nA  no spike
+ic_m16_125 1.8188 nA  no spike
+ic_sun_080 0.5720 nA  no spike
+ic_sun_090 0.6435 nA  no spike
+ic_sun_100 0.7150 nA  no spike
+ic_sun_110 0.7865 nA  spike: section[228] 5.563 ms -> section[0] 16.835 ms (455 sections, 0..454)
+ic_sun_125 0.8937 nA  spike: section[228] 5.373 ms -> section[0] 16.708 ms
+# Run 2 は振り直しが効いておらず（結果が付いていて設定に鍵）Run 1 と同じ条件だった。
+# Run 3（Clear Results → neuron_iclamp_set_amps.py → Run）: MRG を 1.5・2・3・5・10 倍に。Sundt は Run 1 と同じ
+ic_m16 x1.5  2.1825 nA  no spike
+ic_m16 x2    2.9100 nA  spike: node[3] 5.133 ms -> node[0] 5.155 ms (16 sections spiking)
+ic_m16 x3    4.3650 nA  spike: node[3] 5.068 ms -> node[0] 5.100 ms
+ic_m16 x5    7.2750 nA  spike: node[3] 5.033 ms -> node[0] 5.065 ms
+ic_m16 x10  14.5500 nA  spike: node[3] 5.008 ms -> node[0] 5.043 ms
+ic_sun 0.8/0.9/1.0 no spike, 1.1/1.25 spike (Run 1 と同じ)
+# まとめ: Sim4Life の閾値 / MorphoSONIC の閾値 = Sundt 1.0〜1.1・MRG 16 µm 1.5〜2.0
