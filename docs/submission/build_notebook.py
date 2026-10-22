@@ -10,7 +10,7 @@ RESULTS = """Selectivity was 0.358 for tTIS and 0.193 for TUS, TUS remaining 1.6
 
 DISCUSSION = """The two methods fail in opposite ways. TUS keeps the target-level field mostly in one region around the target, 88% of it contiguous with the ROI, but the near-field pressure in the scalp fat reaches a mechanical index of 12.8 at reference drive, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA current ceiling itself, yet its field at the target is closer to its effective range precisely because the insula sits on a monotonic decay from the electrodes rather than at a focus. The improvement paths therefore differ: multi-pair optimisation to create a focus for tTIS, and larger apertures or phased arrays to spare the scalp for TUS.
 
-The insula is also the primary taste cortex; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
+The insula is also the primary taste cortex [3]; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
 
 One model, a spherical ROI and uniform bone without CT limit these numbers. No statistical confidence interval follows from a single head; instead we measured reproducibility against a separate build, finding volume means within 1% and single cells varying by 6 to 7%."""
 
@@ -18,7 +18,9 @@ CONCLUSIONS = """On one head model, with each method at its own safety limit, th
 
 REFERENCES = """1. Inoue T, Otsuru N, Hirata A. Group-level and personalized optimization for the insula and hippocampus focal electric field in transcranial temporal interferential stimulation: a computational study. arXiv:2510.23290 (2025).
 
-2. Sharif F, Harmer CJ, Klein-Flügge MC, Tan H. Novel NIBS in psychiatry: unveiling TUS and TI for research and treatment. Brain Neurosci Adv 9, 23982128251322241 (2025). doi:10.1177/23982128251322241"""
+2. Sharif F, Harmer CJ, Klein-Flügge MC, Tan H. Novel NIBS in psychiatry: unveiling TUS and TI for research and treatment. Brain Neurosci Adv 9, 23982128251322241 (2025). doi:10.1177/23982128251322241
+
+3. Avery JA, Liu AG, Ingeholm JE, Riddell CD, Gotts SJ, Martin A. Taste quality representation in the human brain. J Neurosci (2020). doi:10.1523/JNEUROSCI.1751-19.2019"""
 
 def wc(t):
     t = re.sub(r'\s+', ' ', t).strip()
