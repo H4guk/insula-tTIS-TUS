@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """提出用 notebook の仮版を組み立て、各節の語数を検算する。"""
-import json, re, os
+import base64, json, re, os
 
 ABSTRACT = """The insula is a candidate target for treating addiction, but its depth hinders non-invasive access. Temporal interference stimulation (tTIS) and transcranial ultrasound stimulation (TUS) both promise deep access, yet have been compared only qualitatively, with TUS judged far more focal. We compared them quantitatively on one head model, each in a standard configuration at its own safety limit. TUS did form a focus, but its amplitude reached only 42% of the lower end of its effective range; tTIS formed no focus yet exceeded that lower end (113%). Focality and reach trade off, and each method needs a different fix."""
 
@@ -38,29 +38,6 @@ for name, txt, lim in LIMITS:
 print('%-12s %6d %6d' % ('TOTAL', total, 850))
 
 # ============ notebook を組み立てる ============
-CODE = '''# Target-level reach volume — the number behind Figures 2 and 3.
-# Run inside the Sim4Life project that holds tTIS_LF1, tTIS_LF2 and TUS_250k.
-# Full scripts: https://github.com/H4guk/insula-tTIS-TUS  (scripts/brain_by_name.py)
-# brain3 = the twelve brain-parenchyma tissues, picked by material_name in Input.h5 (same for both methods).
-
-import numpy as np, s4l_v1.document as document
-
-FOCUS_MM, ROI_R_MM = np.array([99.1, 295.0, 1562.2]), 10.0
-
-def reach(field3, brain3, roi3, vol3):
-    """Volume at or above the target level, and how much of it touches the ROI."""
-    w = vol3[roi3 & brain3]
-    target = float((field3[roi3 & brain3] * w).sum() / w.sum())   # ROI volume mean
-    ge = brain3 & (field3 >= target)                              # at or above it
-    mL = lambda m: float(vol3[m].sum()) * 1e6
-    return dict(target=target, v_ge=mL(ge), v_roi=mL(roi3),
-                ratio=mL(ge) / mL(roi3), brain_pct=100 * mL(ge) / mL(brain3))
-
-# tTIS: TI = 2*min(s1|E1|, s2|E2|); the current scaling cannot be skipped because
-# min() is non-linear, so the two pairs must be scaled before they are combined.
-# TUS: |p| straight from the acoustic solver.
-# -> tTIS 35.9 mL (8.6x ROI, 3.45% of the brain) / TUS 7.3 mL (1.7x ROI, 0.70%)
-'''
 
 FIG_CAPS = [
     ("figures/fig1_field_slices.png",
@@ -93,9 +70,19 @@ cells = [
     md("## References\n"), md(REFERENCES + "\n"),
     md("## Figures\n"),
 ]
+HERE = os.path.dirname(os.path.abspath(__file__))
+# 図は notebook に埋め込む（添付）。notebook だけ渡しても図が出る
 for path, cap in FIG_CAPS:
-    cells.append(md("![](%s)\n" % path))
+    fn = os.path.basename(path)
+    with open(os.path.join(HERE, '..', path), 'rb') as f:
+        b64 = base64.b64encode(f.read()).decode('ascii')
+    cell = md("![%s](attachment:%s)\n" % (fn, fn))
+    cell["attachments"] = {fn: {"image/png": b64}}
+    cells.append(cell)
     cells.append(md(cap + "\n"))
+# 末尾の code cell は scripts/ の実物をそのまま入れる（notebook と repo で食い違わないように）
+with open(os.path.join(HERE, '..', '..', 'scripts', 'submission_code_cell.py')) as f:
+    CODE = f.read()
 cells.append({"cell_type": "code", "execution_count": None, "metadata": {},
               "outputs": [], "source": CODE.splitlines(keepends=True)})
 
