@@ -124,6 +124,8 @@ hard to reach selectively.」＝**背景としては正しいが、新規性が�
 
 ### 5. タイトルを主張にする
 
+> 2026-10-22 反映済み（GH #20）: *Focus without reach, reach without focus: TUS and tTIS at their safety limits in the human insula*。逆転（TUS は焦点を結ぶが届かない・tTIS は届くが焦点を結ばない）をそのまま言い、条件（各手法の安全上限）を入れた。
+
 現在: *Focality and reach trade off: tTIS versus TUS targeting the human insula*
 → 「trade off」だけだと弱い。**逆転を言う**か、**既存理解の修正**を出す方向で再考する余地がある。
 

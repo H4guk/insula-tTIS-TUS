@@ -83,7 +83,7 @@ def md(src):
     return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
 
 cells = [
-    md("# Focality and reach trade off: tTIS versus TUS targeting the human insula\n"),
+    md("# Focus without reach, reach without focus: TUS and tTIS at their safety limits in the human insula\n"),
     md("### *by {NAME SURNAME}*\n\n*Submitted to S4L Student Competition 2026*\n"),
     md("## Abstract\n"), md(ABSTRACT + "\n"),
     md("## Methods\n"), md(METHODS + "\n"),
