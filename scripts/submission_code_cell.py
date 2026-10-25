@@ -11,7 +11,7 @@ BRAIN = ('Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_
          'Commissura_posterior')                                   # same twelve tissues for both methods
 I_MA = (0.891, 1.109)                    # tTIS currents, 2 mA in total (Inoue 2025)
 MI_LIMIT, F_MHZ = 1.9, 0.25              # TUS safety limit and frequency
-LOWER_VM, LOWER_WCM2 = 0.2, 3.0          # lower ends of the effective ranges [1], [2]
+LOWER_VM, LOWER_WCM2 = 0.2, 3.0          # lower ends of the effective ranges [1], [3]
 
 
 def sim(name):
