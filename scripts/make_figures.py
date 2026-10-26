@@ -92,7 +92,7 @@ for b, v in zip(bars, vals):
     ax.text(v + 0.008, b.get_y() + b.get_height() / 2, '%.4f' % v,
             va='center', ha='left', fontsize=12, color=INK)
 ax.set_xlim(0, 0.46)
-ax.set_xlabel('non-target mean / target mean   (lower is better)')
+ax.set_xlabel('non-target mean / ROI mean   (lower is better)')
 ax.set_title('Selectivity in the brain', loc='left', fontsize=13, pad=22)
 ax.invert_yaxis()
 save(fig, 'fig1_selectivity')
@@ -104,8 +104,8 @@ save(fig, 'fig1_selectivity')
 #   下端超えの ROI 割合は results/ti_roi_threshold_fraction_2026-10-20.txt（tTIS）・tus_safety_drive.py（TUS）。
 fig, ax = base_axes(figsize=(7.6, 3.1))
 rows = [
-    ('tTIS', 0.2265 / 0.2,          0.3259 / 0.2,         74.5, TTIS),
-    ('TUS',  (0.531 / 3.0) ** 0.5,  (3.13 / 3.0) ** 0.5,  0.0,  TUS),
+    ('tTIS', 0.2265 / 0.2,          0.3259 / 0.2,         'above it in 74.5 % of the ROI',      TTIS),
+    ('TUS',  (0.531 / 3.0) ** 0.5,  (3.13 / 3.0) ** 0.5,  'above it in 1–2 of 4,186 ROI cells', TUS),
 ]
 for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.plot([mean, mx], [i, i], color=col, linewidth=2.5, solid_capstyle='round', zorder=2)
@@ -117,19 +117,19 @@ for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.text(mx, i - 0.30, '%.0f %%' % (100 * mx), ha='center', va='bottom',
             fontsize=11, color=INK,
             bbox=dict(facecolor=SURFACE, edgecolor='none', pad=1))  # 1.0 の破線に重なっても読める
-    ax.text(1.82, i, 'above onset in %.1f %% of the ROI' % frac,
+    ax.text(1.82, i, frac,
             ha='left', va='center', fontsize=10, color=INK2)
 ax.set_yticks([0, 1]); ax.set_yticklabels([r[0] for r in rows])
 ax.axvline(1.0, color=MUTED, linestyle='--', linewidth=1.2)
-ax.annotate('onset of efficacy', xy=(1.0, 1.0), xycoords=('data', 'axes fraction'),
+ax.annotate('lowest effective level', xy=(1.0, 1.0), xycoords=('data', 'axes fraction'),
             xytext=(0, 6), textcoords='offset points',
             ha='right', va='bottom', fontsize=9, color=INK2)
 ax.set_xlim(0, 2.6)
 ax.set_xticks([0.0, 0.5, 1.0, 1.5])   # データ域だけ目盛る（右は注記の場所）
 ax.set_ylim(1.6, -0.6)
-ax.set_xlabel('target amplitude / lower end of the effective range   (1.0 = onset)\n'
-              'open circle = ROI volume mean · filled = ROI maximum (single strongest cell)')
-ax.set_title('At the lower onset, tTIS covers most of the ROI; TUS does not',
+ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 3 W/cm² as amplitude)\n'
+              'open circle = ROI mean · filled = ROI maximum (single strongest cell)')
+ax.set_title('At the lowest effective level, tTIS covers most of the ROI; TUS does not',
              loc='left', fontsize=13, pad=22)
 save(fig, 'fig2_dose_vs_threshold')
 
@@ -151,9 +151,9 @@ ax.text(7.3 + 1.0, 1, '7.3 mL   1.7× ROI', va='center', ha='left', fontsize=12,
 ax.text(35.3 / 2, 0, '98 % contiguous', va='center', ha='center', fontsize=10, color='white')
 ax.text(6.4 / 2, 1, '88 %', va='center', ha='center', fontsize=10, color='white')
 ax.set_xlim(0, 50)
-ax.set_xlabel('brain volume at or above the target level [mL]\n'
+ax.set_xlabel('brain volume above the ROI mean [mL]\n'
               'solid = contiguous with the ROI · hatched = detached · dashed = ROI volume (4.19 mL)')
-ax.set_title('TUS confines the target-level field; tTIS does not',
+ax.set_title('TUS confines the field above the ROI mean; tTIS does not',
              loc='left', fontsize=13, pad=14)
 ax.invert_yaxis()
 save(fig, 'fig3_reach_volume')
