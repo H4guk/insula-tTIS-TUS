@@ -4,27 +4,45 @@ import base64, json, re, os
 
 ABSTRACT = """The insula is a candidate target for addiction treatment, but its depth hinders non-invasive stimulation. Temporal interference stimulation (tTIS) and transcranial ultrasound stimulation (TUS) can both reach it. However, their electric and acoustic fields share no common unit. We therefore compared their focality and reach using dimensionless measures. To this end, we simulated each method under its standard safety limit on the Virtual Population model Yoon-sun's head. TUS formed a focus but reached only 42% of the lowest effective level. tTIS formed no focus but exceeded that level (113%). Within these limits, neither method achieves both focality and reach."""
 
-METHODS = """Electric and acoustic fields share no unit, so both methods were compared on dimensionless measures. Both were simulated in one Sim4Life.lite 9.6 project, each at its standard safety limit. The head was the Virtual Population model Yoon-sun v3.1, discretised at 1 mm, using the IT'IS tissue database. The region of interest (ROI) was a 10 mm-radius sphere representing the left insula. The brain was the model's parenchymal tissues, identical for both methods. tTIS applied 0.891 mA to T7-P7 at 2000 Hz and 1.109 mA to Fp1-Fp2 at 2010 Hz (2 mA total) [1]. Each pair's field was scaled to its current before taking the non-linear beat envelope, assuming aligned fields. TUS used a 250 kHz, 40 mm-aperture focused transducer at T7, scaled to the mechanical-index safety limit of 1.9 [2]. Focality was judged by whether the ROI-mean contour enclosed the ROI on the insula plane. It was quantified by selectivity, the non-target mean divided by the ROI mean, and by the brain volume above that mean, including its ROI-contiguous part. Reach was the ROI mean relative to the lowest effective level, 0.2 V/m for tTIS and 3 W/cm2 for TUS converted to amplitude [1,3], and the ROI fraction above it."""
+METHODS = """Electric and acoustic fields share no unit, so both methods were compared on dimensionless measures. Both were simulated in one Sim4Life.lite 9.6 project. The head, Virtual Population model Yoon-sun v3.1, was discretised at 1 mm and assigned IT'IS database properties. The region of interest (ROI) was a 10 mm-radius sphere representing the left insula. The brain was the model's parenchymal tissues.
+
+tTIS applied 0.891 mA to T7-P7 at 2000 Hz and 1.109 mA to Fp1-Fp2 at 2010 Hz, totalling the standard 2 mA limit [1]. Its beat envelope was taken after scaling, assuming aligned fields. TUS used a 250 kHz, 40 mm-aperture focused transducer at T7, scaled to the mechanical-index safety limit of 1.9 [2].
+
+Focality was judged by whether the ROI-mean contour enclosed the ROI. It was quantified by selectivity, the non-target mean divided by the ROI mean, and the brain volume above that mean. Reach was the ROI mean relative to the lowest effective level, 0.2 V/m for tTIS and 3 W/cm2 for TUS converted to amplitude [1,3], and the ROI fraction above it. At the neuron level, firing thresholds in and outside the ROI were titrated with Sim4Life's neuron solver for tTIS and MorphoSONIC for TUS [4]."""
 
 RESULTS = """The two methods were compared at their safety limits for focality (Figures 1 and 2) and reach (Figure 3). On the insula plane, the contour at the ROI mean did not close around the ROI for tTIS but did for TUS (Figure 1). Selectivity was 0.358 for tTIS and 0.193 for TUS, roughly half. The brain volume above the ROI mean was as much as 35.9 mL for tTIS, 8.6 times the ROI, but only 7.3 mL for TUS, 1.7 times the ROI (Figure 2). Of this volume, 98% for tTIS and 88% for TUS was contiguous with the ROI, so the tTIS field spread as one large region around the ROI. The ROI mean reached 113% of the lowest effective level for tTIS but only 42% for TUS (Figure 3). tTIS exceeded this level in 74.5% of the ROI, whereas TUS did so in only one or two of its 4,186 cells. In summary, tTIS reached the effective level without forming a focus, whereas TUS formed a focus without reaching it."""
 
-DISCUSSION = """The two methods fail in opposite ways. TUS keeps the target-level field mostly in one region around the target, 88% of it contiguous with the ROI, but the near-field pressure in the scalp fat reaches a mechanical index of 12.2 at reference drive, three times the brain peak, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA ceiling itself. If larger apertures or phased arrays brought the scalp peak down to the brain peak, TUS could be driven three times harder, giving a ROI mean of 4.7 W/cm2, 125% of the lower end. tTIS would need 3.1 mA to reach mid-range, so it must instead create a focus, as optimised montages have done within a cadaver's posterior insula [4].
+DISCUSSION = """The two methods fail in opposite ways. TUS keeps the target-level field mostly in one region around the target, 88% of it contiguous with the ROI, but the near-field pressure in the scalp fat reaches a mechanical index of 12.2 at reference drive, three times the brain peak, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA ceiling itself. If larger apertures or phased arrays brought the scalp peak down to the brain peak, TUS could be driven three times harder, giving a ROI mean of 4.7 W/cm2, 125% of the lower end. tTIS would need 3.1 mA to reach mid-range, so it must instead create a focus, as optimised montages have done within a cadaver's posterior insula [5].
 
-The insula is also the primary taste cortex [5]; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
+The insula is also the primary taste cortex [6]; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
 
 One model, a spherical ROI and uniform bone without CT limit these numbers. No statistical confidence interval follows from a single head; instead we measured reproducibility against a separate build, finding volume means within 1% and single cells varying by 6 to 7%."""
 
 CONCLUSIONS = """On one head model, with each method in a standard configuration at its own safety limit, three things follow. First, the difference in focality is not one of size but of whether a focus exists at all: TUS forms one, tTIS does not. Second, tTIS comes closer to its effective range, the intensities at which neuromodulation has been reported rather than a firing threshold: at the lower end of each range it covers 74.5% of the ROI against one or two cells for TUS, while at mid-range neither reaches it in any cell. Third, focality and depth of reach trade off, giving a well focused but weak TUS against an unfocused but stronger tTIS, and because the limiting mechanism differs the two need different fixes."""
 
-REFERENCES = """1. Inoue T, Otsuru N, Hirata A. Group-level and personalized optimization for the insula and hippocampus focal electric field in transcranial temporal interferential stimulation: a computational study. arXiv:2510.23290 (2025).
+REFERENCES = """1. Inoue T, Otsuru N, Hirata A.  
+Group-level and personalized optimization for the insula and hippocampus focal electric field in transcranial temporal interferential stimulation: a computational study.  
+arXiv:2510.23290 (2025).
 
-2. Aubry J-F, Attali D, Schafer ME, et al. ITRUSST consensus on biophysical safety for transcranial ultrasound stimulation. Brain Stimul 18(6), 1896-1905 (2025). doi:10.1016/j.brs.2025.10.007
+2. Aubry JF, Attali D, Schafer ME, et al.  
+ITRUSST consensus on biophysical safety for transcranial ultrasound stimulation.  
+Brain Stimul., 18:1896–1905 (2025). doi:10.1016/j.brs.2025.10.007
 
-3. Sharif F, Harmer CJ, Klein-Flügge MC, Tan H. Novel NIBS in psychiatry: unveiling TUS and TI for research and treatment. Brain Neurosci Adv 9, 23982128251322241 (2025). doi:10.1177/23982128251322241
+3. Sharif F, Harmer CJ, Klein-Flügge MC, Tan H.  
+Novel NIBS in psychiatry: unveiling TUS and TI for research and treatment.  
+Brain Neurosci Adv., 9:23982128251322241 (2025). doi:10.1177/23982128251322241
 
-4. Fathi Y, Boutachkourt A, Joris V, Onofrj V, Dricot L, Behets C, Hanseeuw B, Liberati G. Focal and steerable temporal interference stimulation of the human left posterior insula: a proof-of-concept validation using intracranial recordings in a human cadaver. Bioengineering 13, 1050 (2026). doi:10.3390/bioengineering13091050
+4. Lemaire T, Vicari E, Neufeld E, Kuster N, Micera S.  
+MorphoSONIC: a morphologically structured intramembrane cavitation model reveals fiber-specific neuromodulation by ultrasound.  
+iScience, 24:103085 (2021). doi:10.1016/j.isci.2021.103085
 
-5. Avery JA, Liu AG, Ingeholm JE, Riddell CD, Gotts SJ, Martin A. Taste quality representation in the human brain. J Neurosci (2020). doi:10.1523/JNEUROSCI.1751-19.2019"""
+5. Fathi Y, Boutachkourt A, Joris V, Onofrj V, Dricot L, Behets C, Hanseeuw B, Liberati G.  
+Focal and steerable temporal interference stimulation of the human left posterior insula: a proof-of-concept validation using intracranial recordings in a human cadaver.  
+Bioengineering, 13:1050 (2026). doi:10.3390/bioengineering13091050
+
+6. Avery JA, Liu AG, Ingeholm JE, Riddell CD, Gotts SJ, Martin A.  
+Taste quality representation in the human brain.  
+J Neurosci., 40:1042–1052 (2020). doi:10.1523/JNEUROSCI.1751-19.2019"""
 
 def wc(t):
     t = re.sub(r'\s+', ' ', t).strip()
