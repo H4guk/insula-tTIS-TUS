@@ -10,7 +10,7 @@ tTIS applied 0.891 mA to T7-P7 at 2000 Hz and 1.109 mA to Fp1-Fp2 at 2010 Hz, to
 
 Focality was judged by whether the ROI-mean contour enclosed the ROI. It was quantified by selectivity, the non-target mean divided by the ROI mean, and the brain volume above that mean. Reach was the ROI mean relative to the lowest effective level, 0.2 V/m for tTIS and 3 W/cm2 for TUS converted to amplitude [1,3], and the ROI fraction above it. At the neuron level, firing thresholds in and outside the ROI were titrated with Sim4Life's neuron solver for tTIS and MorphoSONIC for TUS [4]."""
 
-RESULTS = """The two methods were compared at their safety limits for focality (Figures 1 and 2) and reach (Figure 3). On the insula plane, the contour at the ROI mean did not close around the ROI for tTIS but did for TUS (Figure 1). Selectivity was 0.358 for tTIS and 0.193 for TUS, roughly half. The brain volume above the ROI mean was as much as 35.9 mL for tTIS, 8.6 times the ROI, but only 7.3 mL for TUS, 1.7 times the ROI (Figure 2). Of this volume, 98% for tTIS and 88% for TUS was contiguous with the ROI, so the tTIS field spread as one large region around the ROI. The ROI mean reached 113% of the lowest effective level for tTIS but only 42% for TUS (Figure 3). tTIS exceeded this level in 74.5% of the ROI, whereas TUS did so in only one or two of its 4,186 cells. In summary, tTIS reached the effective level without forming a focus, whereas TUS formed a focus without reaching it."""
+RESULTS = """The two methods were compared at their safety limits for focality (Figures 1 and 2) and reach (Figure 3). On the insula plane, the contour at the ROI mean did not close around the ROI for tTIS but did for TUS (Figure 1). Selectivity was 0.358 for tTIS and 0.193 for TUS, roughly half. The brain volume above the ROI mean was as much as 35.9 mL for tTIS, 8.6 times the ROI, but only 7.3 mL for TUS, 1.7 times the ROI (Figure 2). The ROI mean reached 113% of the lowest effective level for tTIS but only 42% for TUS (Figure 3). tTIS exceeded this level in 74.5% of the ROI, whereas TUS did so in only one or two of its 4,186 cells. At the neuron level, myelinated (MRG) and unmyelinated (Sundt) ROI axons fired at 0.43 and 0.10 times the TUS safety limit, but needed 42 and 3,040 times the tTIS limit. Off-target axons needed 11 times the ROI threshold for TUS but only 0.23 to 0.30 times for tTIS. In summary, tTIS reached the effective level without forming a focus, whereas TUS formed a focus and, at the neuron level, fired the ROI selectively."""
 
 DISCUSSION = """The two methods fail in opposite ways. TUS keeps the target-level field mostly in one region around the target, 88% of it contiguous with the ROI, but the near-field pressure in the scalp fat reaches a mechanical index of 12.2 at reference drive, three times the brain peak, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA ceiling itself. If larger apertures or phased arrays brought the scalp peak down to the brain peak, TUS could be driven three times harder, giving a ROI mean of 4.7 W/cm2, 125% of the lower end. tTIS would need 3.1 mA to reach mid-range, so it must instead create a focus, as optimised montages have done within a cadaver's posterior insula [5].
 
@@ -61,19 +61,18 @@ print('%-12s %6d %6d' % ('TOTAL', total, 850))
 
 FIG_CAPS = [
     ("figures/fig1_field_slices.png",
-     "**Figure 1** Field on the insula plane (X = 99.5 mm), both panels normalised to the target "
-     "level (ROI volume mean). Black line: target level (1.0). Dashed circle: ROI (r = 10 mm). "
-     "Grey line: brain outline; area outside the brain is dimmed. TUS closes a contour around the "
-     "target; tTIS does not."),
+     "**Figure 1** Field on the insula plane (X = 99.5 mm), both panels normalised to the ROI mean. "
+     "Black line: ROI-mean contour (1.0). Dashed circle: ROI (r = 10 mm). Grey line: brain outline; "
+     "area outside the brain is dimmed. The contour encloses the ROI for TUS but not for tTIS."),
     ("figures/fig3_reach_volume.png",
-     "**Figure 2** Brain volume at or above the target level. Solid: contiguous with the ROI. "
-     "Hatched: detached. Dashed line: ROI volume (4.19 mL). Almost all of the tTIS volume is "
-     "contiguous with the target but 8.6 times the ROI; the TUS volume stays within 1.7 times."),
+     "**Figure 2** Brain volume above the ROI mean. Solid: contiguous with the ROI. Hatched: detached. "
+     "Dashed line: ROI volume (4.19 mL). 98% of the tTIS volume and 88% of the TUS volume are contiguous "
+     "with the ROI, so the tTIS field spreads as one large region around it, 8.6 times the ROI; the TUS "
+     "volume stays within 1.7 times."),
     ("figures/fig2_dose_vs_threshold.png",
-     "**Figure 3** Target amplitude relative to the lower end of each method's effective range "
-     "(1.0 = 0.2 V/m for tTIS; 3 W/cm2 ISPPA, converted to amplitude, for TUS). Open circle: ROI "
-     "volume mean. Filled: ROI maximum, i.e. the single strongest cell. Only one or two of the "
-     "4,186 TUS ROI cells reach the lower end."),
+     "**Figure 3** ROI amplitude relative to the lowest effective level (1.0 = 0.2 V/m for tTIS; "
+     "3 W/cm2 ISPPA for TUS, converted to amplitude). Open circle: ROI mean. Filled: ROI maximum, the "
+     "single strongest cell. Only one or two of the 4,186 TUS ROI cells exceed the lowest effective level."),
 ]
 
 def md(src):
