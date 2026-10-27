@@ -1,0 +1,15 @@
+{"fiber": "mrg16", "line": "target_y", "fs": 0.999, "pmax_kPa": 250.89, "thr_kPa": 108.223, "factor": 0.4314, "nsec": 67, "sec": 59.4}
+{"fiber": "mrg16", "line": "target_x", "fs": 0.999, "pmax_kPa": 213.74, "thr_kPa": 107.988, "factor": 0.5052, "nsec": 67, "sec": 67.5}
+{"fiber": "mrg16", "line": "target_z", "fs": 0.999, "pmax_kPa": 221.62, "thr_kPa": 108.867, "factor": 0.4912, "nsec": 67, "sec": 82.0}
+{"fiber": "mrg16", "line": "target_z", "fs": 0.75, "pmax_kPa": 221.62, "thr_kPa": 112.441, "factor": 0.5074, "nsec": 67, "sec": 50.9}
+{"fiber": "mrg16", "line": "target_x", "fs": 0.5, "pmax_kPa": 213.74, "thr_kPa": 113.848, "factor": 0.5326, "nsec": 67, "sec": 52.9}
+{"fiber": "mrg16", "line": "target_x", "fs": 0.75, "pmax_kPa": 213.74, "thr_kPa": 113.262, "factor": 0.5299, "nsec": 67, "sec": 54.5}
+{"fiber": "mrg16", "line": "target_z", "fs": 0.5, "pmax_kPa": 221.62, "thr_kPa": 113.145, "factor": 0.5105, "nsec": 67, "sec": 55.0}
+{"fiber": "mrg16", "line": "target_y", "fs": 0.5, "pmax_kPa": 250.89, "thr_kPa": 114.258, "factor": 0.4554, "nsec": 67, "sec": 57.0}
+{"fiber": "mrg16", "line": "target_y", "fs": 0.75, "pmax_kPa": 250.89, "thr_kPa": 113.555, "factor": 0.4526, "nsec": 67, "sec": 63.8}
+{"fiber": "mrg16", "line": "target_x", "fs": 0.75, "inter_fs": 0.75, "pmax_kPa": 213.74, "thr_kPa": 121.699, "factor": 0.5694, "nsec": 67, "sec": 90.2}
+{"fiber": "mrg16", "line": "target_z", "fs": 0.75, "inter_fs": 0.75, "pmax_kPa": 221.62, "thr_kPa": 123.164, "factor": 0.5557, "nsec": 67, "sec": 93.3}
+{"fiber": "mrg16", "line": "target_y", "fs": 0.75, "inter_fs": 0.75, "pmax_kPa": 250.89, "thr_kPa": 122.227, "factor": 0.4872, "nsec": 67, "sec": 100.7}
+{"fiber": "mrg16", "line": "target_x", "fs": 0.5, "inter_fs": 0.5, "pmax_kPa": 213.74, "thr_kPa": 135.703, "factor": 0.6349, "nsec": 67, "sec": 274.5}
+{"fiber": "mrg16", "line": "target_z", "fs": 0.5, "inter_fs": 0.5, "pmax_kPa": 221.62, "thr_kPa": 137.871, "factor": 0.6221, "nsec": 67, "sec": 305.5}
+{"fiber": "mrg16", "line": "target_y", "fs": 0.5, "inter_fs": 0.5, "pmax_kPa": 250.89, "thr_kPa": 135.293, "factor": 0.5393, "nsec": 67, "sec": 390.8}
