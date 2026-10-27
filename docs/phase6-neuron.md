@@ -135,7 +135,7 @@
 `neuron_iclamp_morpho.py`（MorphoSONIC）、`neuron_iclamp_sweep_setup.py`・`neuron_iclamp_set_amps.py`・`neuron_iclamp_read.py`（Sim4Life。強さを 5 段に振った軸索を 1 回の Run で回す）、結果は `results/neuron_iclamp_sim4life_2026-10-18.txt`。
 
 - **実装の違いは MRG で最大 2 倍、Sundt でほぼ無い**。手法の中の「標的 対 標的外」は同じ実装どうしの比なので、この違いは効かない。tTIS の MRG の標的の倍率 41.8 を 2 で割っても約 21 で、2 mA で発火しないことは変わらない。
-- MRG の 1.5〜2 倍の原因は特定していない（温度 Sim4Life 37 °C 対 MorphoSONIC 36 °C・静止電位など）。Sim4Life 側の温度は確かめていない。
+- MRG の 1.5〜2 倍の原因は特定していない（静止電位・チャネルの実装など）。温度は両ツールとも 36 °C（Sim4Life 側も 36 °C に設定したと本人が確認、2026-10-27）なので、温度は原因ではない。
 - Sim4Life の Sundt は 455 区画（0〜454）で、MorphoSONIC の 456 と 1 つ違う。
 
 ## 5. 限界
