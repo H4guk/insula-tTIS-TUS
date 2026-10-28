@@ -102,10 +102,12 @@ save(fig, 'fig1_selectivity')
 #   統計量を揃えると評価が変わるので、**平均と最大の両方を1本の線で示す**形にした。
 # ★GH #19: 目安は両手法とも有効範囲の下端。量は振幅にそろえる（ISPPA ∝ p² なので TUS は √）。
 #   下端超えの ROI 割合は results/ti_roi_threshold_fraction_2026-10-20.txt（tTIS）・tus_safety_drive.py（TUS）。
+# ★#20（2026-10-28）: TUS の目安 3 W/cm² は頭蓋なし（incident）の値だった（Lee 2021 表5）。
+#   脳内の下端 120 kPa と ROI の |p| をそのまま比べる（results/tus_roi_pressure_2026-10-28.txt）。
 fig, ax = base_axes(figsize=(7.6, 3.1))
 rows = [
     ('tTIS', 0.2265 / 0.2,          0.3259 / 0.2,         'above it in 74.5 % of the ROI',      TTIS),
-    ('TUS',  (0.531 / 3.0) ** 0.5,  (3.13 / 3.0) ** 0.5,  'above it in 1–2 of 4,186 ROI cells', TUS),
+    ('TUS',  112.6 / 120.0,         313.0 / 120.0,        'above it in 41.1 % of the ROI',      TUS),
 ]
 for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.plot([mean, mx], [i, i], color=col, linewidth=2.5, solid_capstyle='round', zorder=2)
@@ -117,19 +119,19 @@ for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.text(mx, i - 0.30, '%.0f %%' % (100 * mx), ha='center', va='bottom',
             fontsize=11, color=INK,
             bbox=dict(facecolor=SURFACE, edgecolor='none', pad=1))  # 1.0 の破線に重なっても読める
-    ax.text(1.82, i, frac,
+    ax.text(2.85, i, frac,
             ha='left', va='center', fontsize=10, color=INK2)
 ax.set_yticks([0, 1]); ax.set_yticklabels([r[0] for r in rows])
 ax.axvline(1.0, color=MUTED, linestyle='--', linewidth=1.2)
 ax.annotate('lowest effective level', xy=(1.0, 1.0), xycoords=('data', 'axes fraction'),
             xytext=(0, 6), textcoords='offset points',
             ha='right', va='bottom', fontsize=9, color=INK2)
-ax.set_xlim(0, 2.6)
-ax.set_xticks([0.0, 0.5, 1.0, 1.5])   # データ域だけ目盛る（右は注記の場所）
+ax.set_xlim(0, 3.6)
+ax.set_xticks([0.0, 0.5, 1.0, 1.5, 2.0, 2.5])   # データ域だけ目盛る（右は注記の場所）
 ax.set_ylim(1.6, -0.6)
-ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 3 W/cm² as amplitude)\n'
+ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 120 kPa in situ)\n'
               'open circle = ROI mean · filled = ROI maximum (single strongest cell)')
-ax.set_title('At the lowest effective level, tTIS covers most of the ROI; TUS does not',
+ax.set_title('tTIS exceeds the lowest effective level; TUS comes close',
              loc='left', fontsize=13, pad=22)
 save(fig, 'fig2_dose_vs_threshold')
 
