@@ -12,11 +12,11 @@ Focality was judged by whether the ROI-mean contour enclosed the ROI. It was qua
 
 RESULTS = """The two methods were compared at their safety limits for focality (Figures 1 and 2) and reach (Figure 3). On the insula plane, the contour at the ROI mean did not close around the ROI for tTIS but did for TUS (Figure 1). Selectivity was 0.358 for tTIS and 0.193 for TUS, roughly half. The brain volume above the ROI mean was as much as 35.9 mL for tTIS, 8.6 times the ROI, but only 7.3 mL for TUS, 1.7 times the ROI (Figure 2). The ROI mean reached 113% of the lowest effective level for tTIS but only 42% for TUS (Figure 3). tTIS exceeded this level in 74.5% of the ROI, whereas TUS did so in only one or two of its 4,186 cells. At the neuron level, myelinated (MRG) and unmyelinated (Sundt) ROI axons fired at 0.43 and 0.10 times the TUS safety limit, but needed 42 and 3,040 times the tTIS limit. Off-target axons needed 11 times the ROI threshold for TUS but only 0.23 to 0.30 times for tTIS. In summary, tTIS reached the effective level without forming a focus, whereas TUS formed a focus and, at the neuron level, fired the ROI selectively."""
 
-DISCUSSION = """The two methods fail in opposite ways. TUS keeps the target-level field mostly in one region around the target, 88% of it contiguous with the ROI, but the near-field pressure in the scalp fat reaches a mechanical index of 12.2 at reference drive, three times the brain peak, so the source cannot be driven hard enough for the focus to matter. tTIS is limited by the 2 mA ceiling itself. If larger apertures or phased arrays brought the scalp peak down to the brain peak, TUS could be driven three times harder, giving a ROI mean of 4.7 W/cm2, 125% of the lower end. tTIS would need 3.1 mA to reach mid-range, so it must instead create a focus, as optimised montages have done within a cadaver's posterior insula [5].
+DISCUSSION = """At their safety limits, neither the TUS nor the tTIS field targeted the insula with both focality and reach: TUS confined its field to the ROI but stayed below the lowest effective level, whereas tTIS exceeded that level without a focus. At the neuron level, TUS fired the ROI axons, whereas tTIS fired none. TUS stayed more selective on both yardsticks, whereas the method reaching the ROI switched.
 
-The insula is also the primary taste cortex [6]; multi-focal, temporally patterned stimulation could in future extend this line of work towards reproducing taste.
+These findings agree with earlier work and explain each method's limit. tTIS selectivity (0.36) is close to the 0.4 reported for this insula montage [1]. As tTIS was limited by the current itself, optimised montages could improve its focality, as in a cadaver insula [5]. For TUS, the lower threshold of unmyelinated fibres also matches MorphoSONIC predictions [4]. As TUS was limited by scalp near-field pressure exceeding the brain peak, phased arrays could improve its reach [6].
 
-One model, a spherical ROI and uniform bone without CT limit these numbers. No statistical confidence interval follows from a single head; instead we measured reproducibility against a separate build, finding volume means within 1% and single cells varying by 6 to 7%."""
+This study has three limitations. First, one head model gives no confidence interval. Second, TUS neuron results rest on MorphoSONIC, which models only intramembrane cavitation and predicts thresholds far below human-study intensities [3]. Third, the axons were peripheral fibres, not cortical pyramidal neurons [7]. Therefore, comparisons across more head models using pyramidal neurons are needed."""
 
 CONCLUSIONS = """On one head model, with each method in a standard configuration at its own safety limit, three things follow. First, the difference in focality is not one of size but of whether a focus exists at all: TUS forms one, tTIS does not. Second, tTIS comes closer to its effective range, the intensities at which neuromodulation has been reported rather than a firing threshold: at the lower end of each range it covers 74.5% of the ROI against one or two cells for TUS, while at mid-range neither reaches it in any cell. Third, focality and depth of reach trade off, giving a well focused but weak TUS against an unfocused but stronger tTIS, and because the limiting mechanism differs the two need different fixes."""
 
@@ -40,9 +40,13 @@ iScience, 24:103085 (2021). doi:10.1016/j.isci.2021.103085
 Focal and steerable temporal interference stimulation of the human left posterior insula: a proof-of-concept validation using intracranial recordings in a human cadaver.  
 Bioengineering, 13:1050 (2026). doi:10.3390/bioengineering13091050
 
-6. Avery JA, Liu AG, Ingeholm JE, Riddell CD, Gotts SJ, Martin A.  
-Taste quality representation in the human brain.  
-J Neurosci., 40:1042–1052 (2020). doi:10.1523/JNEUROSCI.1751-19.2019"""
+6. Martin E, Roberts M, Grigoras IF, et al.  
+Ultrasound system for precise neuromodulation of human deep brain circuits.  
+Nat Commun., 16:8024 (2025). doi:10.1038/s41467-025-63020-1
+
+7. Wang B, Aberra AS, Grill WM, Peterchev AV.  
+Responses of model cortical neurons to temporal interference stimulation and related transcranial alternating current stimulation modalities.  
+J Neural Eng., 19:066047 (2022). doi:10.1088/1741-2552/acab30"""
 
 def wc(t):
     t = re.sub(r'\s+', ' ', t).strip()
