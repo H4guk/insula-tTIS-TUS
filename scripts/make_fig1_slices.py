@@ -1,6 +1,6 @@
 """Figure 1: 両手法の場スライスを島皮質断面で並置（**Sim4Life の Python コンソールで実行**）。
 
-`probe_slice_export.py` で matplotlib 3.9.2 が使えると確認したので、Sim4Life 側で直接 PNG を作る。
+`archive/probe_slice_export.py` で matplotlib 3.9.2 が使えると確認したので、Sim4Life 側で直接 PNG を作る。
 出力: /home/smu/work/workspace/fig1_field_slices.png （+ .svg）  ← ブラウザからダウンロードする
 
 設計:

@@ -150,7 +150,7 @@ CVD・コントラストの検証に合格（ΔE 24.7 protan / 33.6 normal / 対
 |---|---|---|
 | tTIS 選択性・ROI 内 TI・閾値超え | `ti_analysis.py` | 統合版（2026-08-27） |
 | TUS 選択性・脳マスク | `tus_selectivity.py` | 統合版（2026-08-27） |
-| 標的レベルが及ぶ範囲（両手法） | `reach_volume.py` | 統合版（2026-08-27） |
+| 標的レベルが及ぶ範囲（両手法） | `archive/reach_volume.py`（2026-10-14 から `brain_by_name.py`） | 統合版（2026-08-27） |
 | TUS -6dB 焦点の形・位置ズレ | `tus_focus_size.py` | 分離版（2026-08-27） |
 | tTIS に焦点が無いことの検証 | `ti_local_maxima.py` | 分離版（2026-08-27） |
 | TUS 安全駆動（MI<1.9・音源 0.156MPa → ISPPA 平均 0.531 / 最大 3.13） | `tus_safety_drive.py` | 統合版（2026-08-28）※分離版 2.9 から +8% |
