@@ -22,7 +22,7 @@ CONCLUSIONS = """tTIS and TUS had not been compared in the insula, and their fie
 
 REFERENCES = """1. Inoue T, Otsuru N, Hirata A.  
 Group-level and personalized optimization for the insula and hippocampus focal electric field in transcranial temporal interferential stimulation: a computational study.  
-arXiv:2510.23290 (2025).
+Comput Biol Med., 200:111374 (2026). doi:10.1016/j.compbiomed.2025.111374
 
 2. Aubry JF, Attali D, Schafer ME, et al.  
 ITRUSST consensus on biophysical safety for transcranial ultrasound stimulation.  
