@@ -74,6 +74,8 @@ hard to reach selectively.」＝**背景としては正しいが、新規性が�
 
 ### ★3.5. 「届かせる道筋」を数字で書く（基準①②）— 追加計算ゼロ
 
+> 2026-10-22 反映済み（Discussion・GH #20）。統合版の値（頭皮 6.10 MPa・参照 MI 12.2）で計算し直した。下の数字と同じ結果（約3倍・約9倍・4.7 W/cm²＝下端の振幅 125%）。tTIS は中点に 3.1 mA。
+
 **2026-08-28 の議論で浮上。結論が「どちらも届かない」で終わらず「何をすれば届くか」まで言える。**
 
 手元の場から**すでに読める**数字:
@@ -99,7 +101,9 @@ hard to reach selectively.」＝**背景としては正しいが、新規性が�
 "tTIS comes closer to its effective range: at the lower end of each range it covers 74.5% of the ROI against none for TUS, while at the midpoint neither reaches it" に変えた。
 **Abstract と Discussion でも「有効範囲の下端」という限定を明示**する。
 
-### ★3.7. 味覚再現の観点での結論を1文入れる（基準①）
+### ~~★3.7. 味覚再現の観点での結論を1文入れる（基準①）~~ — 2026-10-15 取り下げ
+
+> 背景は依存症で、味の質の再現は比較の軸から外した（多点・時間パターンは装置の能力で、今回測っていない）。味覚は Discussion の将来展望で1文触れるだけにする。以下は当時の案として残す。
 
 **味覚再現を目的に固定すると優劣がつく＝TUS。** Discussion の Level 2 段に1文。
 
@@ -119,6 +123,8 @@ hard to reach selectively.」＝**背景としては正しいが、新規性が�
 - キャプションに**読み取り方**を書く（Figure 1 の「1.0 の等値線が Figure 2 の体積に対応する」など）
 
 ### 5. タイトルを主張にする
+
+> 2026-10-22 反映済み（GH #20）: *Focus without reach, reach without focus: TUS and tTIS at their safety limits in the human insula*。逆転（TUS は焦点を結ぶが届かない・tTIS は届くが焦点を結ばない）をそのまま言い、条件（各手法の安全上限）を入れた。
 
 現在: *Focality and reach trade off: tTIS versus TUS targeting the human insula*
 → 「trade off」だけだと弱い。**逆転を言う**か、**既存理解の修正**を出す方向で再考する余地がある。

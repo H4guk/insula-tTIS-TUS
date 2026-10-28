@@ -1,0 +1,7 @@
+# scripts/tus_roi_pressure.py run in the integrated Sim4Life.lite 9.6.0 project (tTIS-TUS), 2026-10-28
+scale: reference MI 12.2 -> source 0.156 MPa
+ROI cells 4186, mean rho*c 1.61e+06
+ROI mean |p| 112.6 kPa = 94% of 120 kPa (in situ lower end)
+ROI max  |p| 313.0 kPa
+ROI fraction >= 120 kPa: 41.1%
+check: ROI mean ISPPA 0.531 W/cm2 (expected 0.531) = 42% of 3 W/cm2 in amplitude
