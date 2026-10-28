@@ -88,7 +88,7 @@ def md(src):
 
 cells = [
     md("# Focality and Reach of Transcranial Ultrasound Versus Temporal Interference Stimulation of the Human Insula Within Safety Limits: A Computational Study\n"),
-    md("### *by {NAME SURNAME}*\n\n*Submitted to S4L Student Competition 2026*\n"),
+    md("### *by Ryo Shimbo*\n\n*Submitted to S4L Student Competition 2026*\n"),
     md("## Abstract\n"), md(ABSTRACT + "\n"),
     md("## Methods\n"), md(METHODS + "\n"),
     md("## Results\n"), md(RESULTS + "\n"),
