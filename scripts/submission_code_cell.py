@@ -1,7 +1,7 @@
 # The numbers behind the report, from the submitted Sim4Life project (read-only).
 # Run inside the project that holds tTIS_LF1, tTIS_LF2 and TUS_250k (already run).
 # Full scripts and history: https://github.com/H4guk/insula-tTIS-TUS (scripts/)
-#   tTIS: brain_by_name.py, ti_roi_threshold_fraction.py   TUS: brain_by_name.py, tus_safety_drive.py
+#   tTIS: brain_by_name.py, ti_roi_threshold_fraction.py   TUS: brain_by_name.py, tus_roi_pressure.py
 import numpy as np, h5py
 import s4l_v1.document as document
 
@@ -11,7 +11,7 @@ BRAIN = ('Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_
          'Commissura_posterior')                                   # same twelve tissues for both methods
 I_MA = (0.891, 1.109)                    # tTIS currents, 2 mA in total (Inoue 2025)
 MI_LIMIT, F_MHZ = 1.9, 0.25              # TUS safety limit and frequency
-LOWER_VM, LOWER_WCM2 = 0.2, 3.0          # lower ends of the effective ranges [1], [3]
+LOWER_VM, LOWER_KPA = 0.2, 120.0         # lowest effective levels: tTIS [1,3], TUS in situ [4]
 
 
 def sim(name):
@@ -110,16 +110,16 @@ s = sim('TUS_250k')
 pf = field(s, 'p(x,y,z,f)')
 vol, roi = grid(pf.Grid)
 p3 = np.abs(np.asarray(pf.Field(0))).reshape(vol.shape, order='F')
-name3, rho3, c3 = tissues(s)
+name3, _, _ = tissues(s)
 brain = np.isin(name3, BRAIN)
 compare('TUS', p3, brain, roi, vol)
 mi_ref = float(np.nanmax(p3)) * 1e-6 / np.sqrt(F_MHZ)           # set by the scalp fat
 k = MI_LIMIT / mi_ref
-isppa = (p3 * k) ** 2 / (2.0 * rho3 * c3) * 1e-4                # W/cm2, local rho*c, per cell
+p_kpa = p3 * k * 1e-3                                           # in situ |p| at the safety drive
 m = roi & brain
-isppa_mean = float((isppa[m] * vol[m]).sum() / vol[m].sum())
-print('      reference MI %.1f -> source %.3f MPa; ROI mean ISPPA %.3f W/cm2 = %.0f%% of %.0f W/cm2 in amplitude'
-      % (mi_ref, k, isppa_mean, 100 * np.sqrt(isppa_mean / LOWER_WCM2), LOWER_WCM2))
+p_mean = float((p_kpa[m] * vol[m]).sum() / vol[m].sum())
+print('      reference MI %.1f -> source %.3f MPa; ROI mean %.1f kPa = %.0f%% of %.0f kPa; %.1f%% of the ROI above it'
+      % (mi_ref, k, p_mean, 100 * p_mean / LOWER_KPA, LOWER_KPA, 100 * vol[m & (p_kpa >= LOWER_KPA)].sum() / vol[m].sum()))
 
 # Expected: tTIS selectivity 0.358, 35.9 mL (8.6x), 98%; ROI mean 0.2265 V/m = 113%, 74.5% of the ROI
-#           TUS  selectivity 0.193,  7.3 mL (1.7x), 88%; MI 12.2 -> 0.156 MPa; 0.531 W/cm2 = 42%
+#           TUS  selectivity 0.193,  7.3 mL (1.7x), 88%; MI 12.2 -> 0.156 MPa; 112.6 kPa = 94%, 41.1% of the ROI
