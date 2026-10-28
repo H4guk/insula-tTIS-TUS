@@ -70,8 +70,8 @@ Figures セクション内での追加なので構成は崩さない。
 | 図 | 内容 | 状態 |
 |---|---|---|
 | **Figure 1** | **両手法の場スライスを島皮質断面で並置**（tTIS の TI 包絡 / TUS の \|p\|）＝手法の違いが一目で分かる | ✅ `fig1_field_slices.png`（2026-10-14 脳の輪郭を 12 組織で作り直し） |
-| **Figure 2** | **標的レベル以上が及ぶ脳体積**（solid = 地続き / hatched = 飛び地。tTIS は 98% が地続き＝標的を含む一塊として ROI の 8.6 倍に広がる）＝結論①の核心 | ✅ `fig3_reach_volume.png` |
-| **Figure 3** | **標的の強さ / 有効範囲の下端**（振幅・dumbbell: 平均と最大。2026-10-20 GH #19 で描き直し）＝結論②③の核心 | ✅ `fig2_dose_vs_threshold.png` |
+| **Figure 2** | **標的レベル以上が及ぶ脳体積**（solid = 地続き / hatched = 飛び地。tTIS は 98% が地続き＝標的を含む一塊として ROI の 8.6 倍に広がる）＝結論①の核心 | ✅ `fig2_reach_volume.png` |
+| **Figure 3** | **標的の強さ / 有効範囲の下端**（振幅・dumbbell: 平均と最大。2026-10-20 GH #19 で描き直し）＝結論②③の核心 | ✅ `fig3_dose_vs_threshold.png` |
 
 `fig1_selectivity.png`（選択性バー）は**落とす** — 数値を Results の本文で述べれば足りる。
 

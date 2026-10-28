@@ -72,12 +72,12 @@ FIG_CAPS = [
      "**Figure 1** Field on the insula plane (X = 99.5 mm), both panels normalised to the ROI mean. "
      "Black line: ROI-mean contour (1.0). Dashed circle: ROI (r = 10 mm). Grey line: brain outline; "
      "area outside the brain is dimmed. The contour encloses the ROI for TUS but not for tTIS."),
-    ("figures/fig3_reach_volume.png",
+    ("figures/fig2_reach_volume.png",
      "**Figure 2** Brain volume above the ROI mean. Solid: contiguous with the ROI. Hatched: detached. "
      "Dashed line: ROI volume (4.19 mL). 98% of the tTIS volume and 88% of the TUS volume are contiguous "
      "with the ROI, so the tTIS field spreads as one large region around it, 8.6 times the ROI; the TUS "
      "volume stays within 1.7 times."),
-    ("figures/fig2_dose_vs_threshold.png",
+    ("figures/fig3_dose_vs_threshold.png",
      "**Figure 3** ROI amplitude relative to the lowest effective level (1.0 = 0.2 V/m for tTIS; "
      "120 kPa in situ for TUS). Open circle: ROI mean. Filled: ROI maximum, the "
      "single strongest cell. Right: fraction of the ROI above the lowest effective level."),
