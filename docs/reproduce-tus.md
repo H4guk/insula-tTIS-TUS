@@ -1,5 +1,7 @@
 # TUS（Phase 4）再現手順
 
+> **2026-10-29（#25）**: 提出物の再現は `reproduce-submission.md`。この手順の `ti_analysis.py`・`tus_selectivity.py`・`ti_focus_size.py`・`tus_focus_analysis.py`・`tus_axial_profile.py`・`sigma_map.py`・`audit_materials.py`・`probe_cell_limit.py`・`probe_geometry_match.py` は `scripts/archive/` に移した（中身は変えていない）。
+
 > **2026-10-14 注記（GH #17）**: ここに書かれた選択性・脳マスクの値は、当時の脳の定義（tTIS は σ 0.33〜0.44 の帯・TUS は (c, ρ) の帯）によるもの。帯には脳以外の組織が混ざり、手法ごとに定義も違っていた。現在は両手法とも Input.h5 の組織名で決めた**脳実質 12 組織（1041.5 mL）**で比べている。新旧の値の対応は `brain-mask-fix-inventory.md` §1。この記録は当時の値のまま残す。
 > 旧いスクリプト（`tus_selectivity.py`）は今も (c, ρ) の帯を使うので、下の期待値（選択性 0.1978 / 0.2054）はその検算用として有効。
 

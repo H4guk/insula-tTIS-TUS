@@ -15,23 +15,15 @@
 
 ```
 insula-tTIS-TUS/
-├── README.md          # 本ファイル（概要・再現手順・Yoon-sun 入手方法）
-├── requirements.txt   # 後処理・可視化用ライブラリ（s4l_v1 は Sim4Life が提供）
-├── .gitignore         # *.smash / モデルデータ / 出力フィールド / 秘密情報 を除外
-├── scripts/           # Sim4Life.lite Python コンソールで実行するスクリプト
-│   ├── load_yoonsun.py            # ① Yoon-sun 頭部モデルの読み込み
-│   ├── detect_coordinate_system.py# ② 座標系・ランドマーク・島皮質 ROI の検出
-│   ├── place_electrodes.py        # ③ 10-20 → 球フィット → 電極パッド生成（Montage I）
-│   ├── assign_materials.py        # ④ 頭部組織へ σ を割り当て（IT'IS LF DB + skin 上書き）
-│   ├── setup_simulation.py        # ⑤ ±電位 BC + グリッド（頭部 1mm / 体 5mm）
-│   └── ti_analysis.py             # ⑥ E 場抽出 → TI 包絡線 → ROI 定量
-├── configs/           # モンタージュ・材料・BC・グリッド・ROI のパラメータ集約
-│   └── parameters.py
-├── notebooks/         # 解析ノートブック
-├── docs/              # 手法・評価枠組み・進捗ログ
-│   ├── method.md
-│   └── progress-log.md
-└── results/           # 小さい図・指標 CSV（大きい出力フィールドは .gitignore）
+├── README.md          # 本ファイル（概要・再現手順の入口・Yoon-sun 入手方法）
+├── requirements.txt   # ローカルの図・表用ライブラリ（s4l_v1 は Sim4Life が提供）
+├── scripts/           # Sim4Life.lite の Python コンソールに貼るスクリプト（一部ローカル）。分類は scripts/README.md
+│   └── archive/       # 一度きりの調査・置き換えられたもの（履歴として保存）
+├── docs/              # 手法・評価枠組み・再現手順・経過
+│   ├── reproduce-submission.md  # ★提出物の再現手順
+│   ├── figures/       # 図1〜3（PNG・SVG）
+│   └── submission/    # 提出物の notebook と組み立てスクリプト
+└── results/           # 数値の出力（大きい場のファイルは .gitignore）
 ```
 
 ## 実行環境
@@ -40,18 +32,17 @@ insula-tTIS-TUS/
 - `scripts/` は `s4l_v1` / `XCoreModeling` に依存し、**ローカル単体では動かない**（Sim4Life が提供する API）。コンソールに貼って `Shift+Enter`。
 - Lite の制限: モデルは Yoon-sun 1体固定 / グリッド 2000万セルまで / HPC ソルバーなし。
 
-## 再現手順（新規プロジェクトで最初から）
+## 再現手順
 
-1. Sim4Life.lite で新規プロジェクトを作成。
-2. `scripts/load_yoonsun.py` を実行 → Yoon-sun をモデルツリーに読み込む（GUI では不可・Python 経由）。
-3. `scripts/detect_coordinate_system.py` → 軸の意味・ランドマーク・島皮質 ROI を確認。
-4. `scripts/place_electrodes.py` → Montage I（T7 / P7 / Fp1 / Fp2）の電極パッドを生成。
-5. `scripts/assign_materials.py` → 頭部 59 組織に σ を割り当て（IT'IS LF DB 自動リンク）。
-6. `scripts/setup_simulation.py` → ±電位 BC とグリッドを設定。
-7. **各ステップ後に `s4l_v1.document.Save()` で保存**（保存忘れで状態が壊れた事故あり）。
-8. ペア1（T7–P7）／ペア2（Fp1–Fp2）を別シミュとして Run（2000 / 2010 Hz）。
-9. `scripts/ti_analysis.py` → 2 つの E 場から `TI = 2·min(|E1|,|E2|)` を計算 → 島皮質 ROI で定量。
-10. 選択性（非標的平均 / 標的平均）を先行研究 Inoue 2025 の **≈0.40** と桁で照合。
+提出物（`docs/submission/submission_draft.ipynb`）の数値と図1〜3を出す手順は **`docs/reproduce-submission.md`** にまとめた。流れは次のとおり。
+
+1. **モデル**: Yoon-sun の読み込み → 座標系と ROI → 電極4枚 → トランスデューサ（`load_yoonsun.py` → `detect_coordinate_system.py` → `define_insula_roi.py` → `place_electrodes.py` → `build_transducer.py`）
+2. **シミュレーション**: tTIS 2ペア（`tTIS_LF1` 2000 Hz・`tTIS_LF2` 2010 Hz）と TUS（`TUS_250k` 250 kHz）を1つのプロジェクトで Run
+3. **場のレベルの数値**: `brain_by_name.py`・`ti_roi_threshold_fraction.py`・`tus_safety_drive.py`・`tus_roi_pressure.py`。`submission_code_cell.py` で全部をまとめて確かめられる
+4. **神経レベル**: tTIS は Sim4Life の神経ソルバー、TUS は MorphoSONIC（ローカル）→ `neuron_l2_table.py`
+5. **図と notebook**: `make_fig1_slices.py`（Sim4Life）・`make_figures.py`（ローカル）→ `docs/submission/build_notebook.py`
+
+各工程の後に `s4l_v1.document.Save()` で保存する（保存忘れで状態が壊れた事故あり）。
 
 ## Yoon-sun 頭部モデルの入手方法
 
@@ -62,6 +53,7 @@ insula-tTIS-TUS/
 
 ## 参考
 
-- Inoue, Otsuru, Hirata (2025) "Group-Level and Personalized Optimization for the Insula and Hippocampus
-  Focal Electric Field in tTIS" arXiv:2510.23290 — Montage I（T7–P7 + Fp1–Fp2）・選択性 ≈0.40 の出典。
+- Inoue, Otsuru, Hirata (2026) "Group-level and personalized optimization for the insula and hippocampus
+  focal electric field in transcranial temporal interferential stimulation: a computational study"
+  Comput Biol Med 200:111374（arXiv:2510.23290）— Montage I（T7–P7 + Fp1–Fp2）・選択性 ≈0.40 の出典。
 - Grossman et al. (2017) Cell — TI の原理実証。

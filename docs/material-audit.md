@@ -1,7 +1,7 @@
 # 材料対応表の監査（IT'IS LF 5.0）
 
 対応 Issue: [#11](https://github.com/H4guk/insula-tTIS-TUS/issues/11)（ViP 組織名→DB 材料名の対応表を監査していない）
-実測日: 2026-08-12 ／ 出力元: `scripts/audit_materials.py`（読み取り専用）
+実測日: 2026-08-12 ／ 出力元: `scripts/archive/audit_materials.py`（2026-10-29 に移した）（読み取り専用）
 対象: `tTIS_LF1`（頭部グリッド内の 59 組織 ＋ 既定の Air ＝ 60 材料設定 / 42 の異なる材料）
 
 **この表はレポートの材料表としてそのまま使える。**
