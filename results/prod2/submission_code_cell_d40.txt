@@ -1,0 +1,5 @@
+# scripts/submission_code_cell.py run in insula-tTIS-TUS-prod2, 2026-10-29
+tTIS  selectivity 0.358 | >= target level 35.9 mL (8.6x ROI), 98% contiguous with ROI
+      ROI mean 0.2265 V/m = 113% of 0.2 V/m; 74.5% of the ROI above it
+TUS   selectivity 0.195 | >= target level 22.2 mL (5.3x ROI), 90% contiguous with ROI
+      reference MI 11.2 -> source 0.169 MPa; ROI mean 99.2 kPa = 83% of 120 kPa; 33.6% of the ROI above it

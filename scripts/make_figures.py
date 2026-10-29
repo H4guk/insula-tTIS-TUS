@@ -105,10 +105,12 @@ save(fig, 'fig1_selectivity')
 #   下端超えの ROI 割合は results/ti_roi_threshold_fraction_2026-10-20.txt（tTIS）・tus_safety_drive.py（TUS）。
 # ★#20（2026-10-28）: TUS の目安 3 W/cm² は頭蓋なし（incident）の値だった（Lee 2021 表5）。
 #   脳内の下端 120 kPa と ROI の |p| をそのまま比べる（results/tus_roi_pressure_2026-10-28.txt）。
+# ★#25（2026-10-30）: TUS はトランスデューサを頭の外に出した prod2・開口 64 mm の値（results/prod2/*_d64.txt）。
+#   ROI 平均 102.1 kPa・ROI 最大 285.9 kPa（tus_safety_drive_d64）・下端超え 34.8 %（submission_code_cell_d64）。
 fig, ax = base_axes(figsize=(7.6, 3.1))
 rows = [
     ('tTIS', 0.2265 / 0.2,          0.3259 / 0.2,         'above it in 74.5 % of the ROI',      TTIS),
-    ('TUS',  112.6 / 120.0,         313.0 / 120.0,        'above it in 41.1 % of the ROI',      TUS),
+    ('TUS',  102.1 / 120.0,         285.9 / 120.0,        'above it in 34.8 % of the ROI',      TUS),
 ]
 for i, (lab, mean, mx, frac, col) in enumerate(rows):
     ax.plot([mean, mx], [i, i], color=col, linewidth=2.5, solid_capstyle='round', zorder=2)
@@ -132,15 +134,15 @@ ax.set_xticks([0.0, 0.5, 1.0, 1.5, 2.0, 2.5])   # データ域だけ目盛る（
 ax.set_ylim(1.6, -0.6)
 ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 120 kPa in situ)\n'
               'open circle = ROI mean · solid circle = ROI maximum (single strongest voxel)')
-ax.set_title('tTIS exceeds the lowest effective level; TUS comes close',
+ax.set_title('ROI amplitude relative to the lowest effective level',
              loc='left', fontsize=13, pad=22)
 save(fig, 'fig3_dose_vs_threshold')
 
 # ===== Fig.2 標的レベル以上が及ぶ脳体積（内訳つき）=====
 fig, ax = base_axes(figsize=(7.6, 3.1))
 labels = ['tTIS', 'TUS']
-contig = [35.3, 6.4]                 # ROI と地続き
-island = [35.9 - 35.3, 7.3 - 6.4]    # 飛び地
+contig = [35.3, 13.3]                # ROI と地続き（TUS は prod2・開口 64 mm: brain_by_name_d64.txt）
+island = [35.9 - 35.3, 18.2 - 13.3]  # 飛び地
 colors = [TTIS, TUS]
 for i, (lab, c, isl, col) in enumerate(zip(labels, contig, island, colors)):
     ax.barh(i, c, height=0.5, color=col)
@@ -150,13 +152,13 @@ ax.set_yticks([0, 1])
 ax.set_yticklabels(labels)
 ax.axvline(4.186, color=MUTED, linestyle='--', linewidth=1.2)
 ax.text(35.9 + 1.0, 0, '35.9 mL   8.6× ROI', va='center', ha='left', fontsize=12, color=INK)
-ax.text(7.3 + 1.0, 1, '7.3 mL   1.7× ROI', va='center', ha='left', fontsize=12, color=INK)
+ax.text(18.2 + 1.0, 1, '18.2 mL   4.3× ROI', va='center', ha='left', fontsize=12, color=INK)
 ax.text(35.3 / 2, 0, '98 % contiguous', va='center', ha='center', fontsize=10, color='white')
-ax.text(6.4 / 2, 1, '88 %', va='center', ha='center', fontsize=10, color='white')
+ax.text(13.3 / 2, 1, '73 %', va='center', ha='center', fontsize=10, color='white')
 ax.set_xlim(0, 50)
 ax.set_xlabel('brain volume above the ROI mean [mL]\n'
               'solid = contiguous with the ROI · hatched = detached · dashed = ROI volume (4.19 mL)')
-ax.set_title('TUS confines the field above the ROI mean; tTIS does not',
+ax.set_title('Brain volume above the ROI mean for each method',
              loc='left', fontsize=13, pad=14)
 ax.invert_yaxis()
 save(fig, 'fig2_reach_volume')

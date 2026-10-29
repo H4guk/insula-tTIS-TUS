@@ -113,7 +113,7 @@ p3 = np.abs(np.asarray(pf.Field(0))).reshape(vol.shape, order='F')
 name3, _, _ = tissues(s)
 brain = np.isin(name3, BRAIN)
 compare('TUS', p3, brain, roi, vol)
-mi_ref = float(np.nanmax(p3)) * 1e-6 / np.sqrt(F_MHZ)           # set by the scalp fat
+mi_ref = float(np.nanmax(p3)) * 1e-6 / np.sqrt(F_MHZ)           # set by the skull peak (all tissues, including skull)
 k = MI_LIMIT / mi_ref
 p_kpa = p3 * k * 1e-3                                           # in situ |p| at the safety drive
 m = roi & brain
@@ -122,4 +122,4 @@ print('      reference MI %.1f -> source %.3f MPa; ROI mean %.1f kPa = %.0f%% of
       % (mi_ref, k, p_mean, 100 * p_mean / LOWER_KPA, LOWER_KPA, 100 * vol[m & (p_kpa >= LOWER_KPA)].sum() / vol[m].sum()))
 
 # Expected: tTIS selectivity 0.358, 35.9 mL (8.6x), 98%; ROI mean 0.2265 V/m = 113%, 74.5% of the ROI
-#           TUS  selectivity 0.193,  7.3 mL (1.7x), 88%; MI 12.2 -> 0.156 MPa; 112.6 kPa = 94%, 41.1% of the ROI
+#           TUS  selectivity 0.224, 18.2 mL (4.3x), 73%; MI 15.7 -> 0.121 MPa; 102.1 kPa = 85%, 34.8% of the ROI

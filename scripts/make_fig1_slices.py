@@ -237,7 +237,7 @@ cax = fig.add_axes([0.875, 0.20, 0.018, 0.66])
 cb = fig.colorbar(im, cax=cax, extend='max')
 cb.set_label('field strength / ROI mean', color=INK2)
 cb.outline.set_edgecolor(MUTED)
-fig.suptitle('Field on the insula plane (X = %.1f mm):  TUS forms a focus, tTIS does not'
+fig.suptitle('Field distributions on the insula plane (X = %.1f mm)'
              % x_used_t, x=0.02, ha='left', fontsize=13, color=INK)
 fig.text(0.02, 0.03,
          'dashed circle = ROI (r = 10 mm) · black line = ROI-mean contour (1.0) · '

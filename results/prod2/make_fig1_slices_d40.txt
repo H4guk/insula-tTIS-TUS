@@ -1,0 +1,9 @@
+# scripts/make_fig1_slices.py run in insula-tTIS-TUS-prod2, 2026-10-29
+[mask] 脳（12 組織）tTIS 1041.5 mL ・ TUS 1041.4 mL （期待 1041.5 / 1041.5）
+[tTIS] 標的レベル（ROI 体積重み平均 TI）= 0.2265 V/m （期待 0.2265）
+[TUS ] 標的レベル（ROI 体積重み平均 |p|）= 5.866e+05 Pa （期待 7.2e5）
+[slice] X=99.50 (tTIS) / 99.50 (TUS) mm  断面 (110, 124) / (114, 124)
+[out ] /home/smu/work/workspace/fig1_field_slices.png
+[out ] /home/smu/work/workspace/fig1_field_slices.svg
+
+=== Figure 1 生成 完了 — workspace からダウンロードしてください ===

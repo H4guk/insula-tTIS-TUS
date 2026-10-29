@@ -1,17 +1,28 @@
 """工程TUS-1 (4-3) 集束トランスデューサ（球面キャップ）を作成（Sim4Life.lite Python コンソール）。
 
 lec7 の「球→殻→キャップ」Boolean レシピを Python 化。幾何確定値（scripts/plan_transducer.py）:
-  f=250kHz / 曲率半径 R=40mm / 開口 D=40mm(F#=1.0) / 焦点=島皮質 ROI 中心。
-焦点＝球の曲率中心なので、焦点中心の球（R=40）の凹面が焦点を向く。
+  f=250kHz / 開口 D=64mm / 焦点=島皮質 ROI 中心。曲率半径 R は下の 2026-10-29 修正を参照（R_OUT 80.01mm・F# 1.25）。
+焦点＝球の曲率中心なので、焦点中心の球の凹面が焦点を向く。
 
 T7 の位置は **既存の Elec_T7 エンティティ**（tTIS の左側頭電極＝同じ設置点）の重心から取る。
 → tTIS と物理的に同一の設置点＝#36 比較の「同一条件」を幾何レベルで担保。
 
+★2026-10-29 修正（#25）: 軸は焦点→T7 のまま、殻を頭の外に出した（R_IN = R_IN_CLEAR）。
+  それまでは R_OUT = |T7 − F| = 48.5mm で外側の面のてっぺんを頭皮に付けていたので、殻の 40%（1575/3976 セル）が
+  皮下脂肪・皮膚・耳・耳下腺に埋まっていた（実際の TUS は頭皮の外に置き、あいだをジェル＝水で埋める）。
+  軸が頭の表面に斜めに当たるので、開口の中の頭の一番外は焦点から 65.03mm（耳の皮膚・縁。耳介を除いても 64.99mm）
+  ＝ scripts/tus_transducer_overlap.py。殻の内側の面をそれより 0.5mm（ボクセルの半分）＋水 2mm 外に置く。
+  あいだは TUS の背景（Water）で埋まる。
+  開口 40mm のまま外に出すと R_OUT 70.53mm・F# 1.76・フレネル数 N 0.95 になり、音圧の最大が焦点からトランスデューサ側へ
+  約 22mm ずれた（prod2）。開口を 40〜70mm で走査し（tus_aperture_scan.py）、標準機 NeuroFUS CTX-250（250kHz・開口 64mm）と
+  同じ 64mm にした: 開口の中の頭の一番外 74.51mm（皮膚）→ R_IN 77.01mm・R_OUT 80.01mm・F# 1.25・N 2.13。
+  T7 の頭皮でのビーム径は約 39mm で、側頭の音響窓（約 40mm）に収まる。
+
 流れ:
   ① 事前ゲート（Skin / Elec_T7 が実在・同名 Transducer が無い）
-  ② 焦点 F=ROI中心・T7=Elec_T7 重心 → 軸 d=(T7-F)/|T7-F|・距離を実測（設計 R=40 と照合）
-  ③ 球 R_OUT=40（中心 F）と R_IN=37 を Subtract → 厚さ3mmの殻
-  ④ 軸 d 方向の円柱（半径=開口/2=20mm）で Intersect → T7 側のキャップだけ残す
+  ② 焦点 F=ROI中心・T7=Elec_T7 重心 → 軸 d=(T7-F)/|T7-F|・距離を実測（T7 の頭皮〜焦点 48.5mm）
+  ③ 球 R_OUT（中心 F）と R_IN=R_IN_CLEAR を Subtract → 厚さ3mmの殻（頭の外）
+  ④ 軸 d 方向の円柱（半径=開口/2=32mm）で Intersect → T7 側のキャップだけ残す
   ⑤ 'Transducer' にリネーム＋事後検算
 
 geometry を1個作るだけ（不要なら Model ツリーで Transducer を削除すれば戻せる）。
@@ -22,17 +33,17 @@ import XCoreModeling as xc
 import numpy as np
 
 FOCUS = np.array([99.1, 295.0, 1562.2])   # 島皮質 ROI 中心 [mm]（tTIS と同一 ROI）
-# ★曲率半径 R = 焦点距離 = 頭皮(T7)〜焦点の実距離に合わせる（2026-08-20 修正）。
-#   R を固定40mm にすると椀の面が頭皮より内側に埋没する（T7 は焦点から実測 48.5mm）。
-#   焦点を ROI 中心に正しく当てるため R は実測距離に追従させる。
+# 曲率半径 R: 2026-08-20 は「R = 頭皮(T7)〜焦点の実距離 48.5mm」にしたが、殻の厚さと斜めの軸のため頭に埋まった。
+#   2026-10-29 から、殻の内側の面を開口の中の頭の一番外より外に置く（R_IN_CLEAR）。
 SHELL = 3.0                                # 殻の厚み [mm]
-APERTURE_D = 40.0                          # 開口径 [mm]（側頭窓の上限で固定）→ F#=R/D は実測で決まる
-CAP_R = APERTURE_D / 2.0                   # 円柱半径 = 20mm
+R_IN_CLEAR = 74.51 + 0.5 + 2.0             # 殻の内側の面 [mm]＝開口 64mm の中の頭の一番外＋ボクセルの半分＋水の層（2026-10-29）
+APERTURE_D = 64.0                          # 開口径 [mm]（CTX-250 と同じ。頭皮でのビーム径は約 39mm で側頭窓に収まる）
+CAP_R = APERTURE_D / 2.0                   # 円柱半径 = 32mm
 T7_NAME = 'Elec_T7'
 T7_FALLBACK = np.array([94.8, 335.8, 1536.4])   # Elec_T7 重心の実測（電極削除後はこれを使う・2026-08-20）
 NAME = 'Transducer'
 
-FNUM_LO, FNUM_HI = 0.7, 1.6                # F# がこの範囲を外れたら警告
+FNUM_LO, FNUM_HI = 0.7, 1.6                # F# がこの範囲を外れたら警告（開口 64mm で 1.25）
 
 
 def V(p):
@@ -77,8 +88,8 @@ else:
 d = T7 - FOCUS
 dist = float(np.linalg.norm(d))
 d = d / dist
-R_OUT = dist                               # ★焦点距離＝頭皮〜焦点の実距離
-R_IN = R_OUT - SHELL
+R_IN = R_IN_CLEAR                          # ★殻を頭の外に置く（T7 は焦点から dist＝48.5mm の頭皮上）
+R_OUT = R_IN + SHELL
 fnum = R_OUT / APERTURE_D
 print('[geo ] 焦点 F   = %s' % np.round(FOCUS, 1))
 print('[geo ] T7 重心  = %s' % np.round(T7, 1))
@@ -91,9 +102,9 @@ if not (FNUM_LO <= fnum <= FNUM_HI):
 LAM = 6.0
 print('[geo ] 焦点目安: 側方FWHM~%.1f mm / 軸方向~%.1f mm' % (LAM * fnum, 7 * LAM * fnum ** 2))
 
-# 面の中心（凹面のてっぺん）＝焦点から d 方向に R_OUT ＝ 頭皮上に乗る
-p_face = FOCUS + R_OUT * d
-print('[geo ] キャップ面のてっぺん P_face = %s（頭皮上）' % np.round(p_face, 1))
+# 凹面（内側の面）のてっぺん＝焦点から d 方向に R_IN。T7 の頭皮より外（あいだは水）
+p_face = FOCUS + R_IN * d
+print('[geo ] 凹面のてっぺん P_face = %s（T7 の頭皮から %.1f mm 外）' % (np.round(p_face, 1), R_IN - dist))
 
 # ===== ③ 球殻を作る（外球 − 内球）=====
 outer = xc.CreateSolidSphere(V(FOCUS), R_OUT)
