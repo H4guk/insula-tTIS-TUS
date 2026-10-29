@@ -116,7 +116,7 @@ nb = {"cells": cells,
                    "language_info": {"name": "python", "version": "3.11.9"}},
       "nbformat": 4, "nbformat_minor": 5}
 
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'submission_draft.ipynb')
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Shimbo_insula_tTIS_TUS.ipynb')
 with open(out, 'w') as f:
     json.dump(nb, f, ensure_ascii=False, indent=1)
 print('')
