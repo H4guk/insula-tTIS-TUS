@@ -7,8 +7,9 @@ Fig.2 は ROI だけで決まる量なので変わらない。
 2026-10-20（GH #19）: Fig.2 の目安を両手法とも文献の有効範囲の下端（0.2 V/m・3 W/cm²）にし、TUS は振幅に直した（√(ISPPA/3)）。
 
   Fig.1  selectivity          選択性（非標的/標的・小さいほど良い）＋ Inoue 2025 参照線
-  Fig.2  dose_vs_threshold    標的の強さ / 有効範囲の下端（振幅・1.0 = 下端）
-  Fig.3  reach_volume         標的レベル以上が及ぶ脳体積（地続き / 飛び地の内訳つき）
+  Fig.2  reach_volume         標的レベル以上が及ぶ脳体積（地続き / 飛び地の内訳つき）
+  Fig.3  dose_vs_threshold    標的の強さ / 有効範囲の下端（振幅・1.0 = 下端）
+  （番号は提出物の図の番号。2026-10-29 にファイル名を合わせた。下の 10-14・10-20 の記録の Fig.2/3 は当時の番号）
 
 設計（dataviz スキル準拠）:
   - 形: 3枚とも「2手法の比較 + 参照線」なので横棒に統一
@@ -97,7 +98,7 @@ ax.set_title('Selectivity in the brain', loc='left', fontsize=13, pad=22)
 ax.invert_yaxis()
 save(fig, 'fig1_selectivity')
 
-# ===== Fig.2 標的の強さ / 有効範囲の下端（dumbbell）=====
+# ===== Fig.3 標的の強さ / 有効範囲の下端（dumbbell）=====
 # ★旧版は tTIS の「ROI 平均」と TUS の「ROI 最大」を並べていた（2026-08-28 に発覚）。
 #   統計量を揃えると評価が変わるので、**平均と最大の両方を1本の線で示す**形にした。
 # ★GH #19: 目安は両手法とも有効範囲の下端。量は振幅にそろえる（ISPPA ∝ p² なので TUS は √）。
@@ -130,12 +131,12 @@ ax.set_xlim(0, 3.6)
 ax.set_xticks([0.0, 0.5, 1.0, 1.5, 2.0, 2.5])   # データ域だけ目盛る（右は注記の場所）
 ax.set_ylim(1.6, -0.6)
 ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 120 kPa in situ)\n'
-              'open circle = ROI mean · filled = ROI maximum (single strongest cell)')
+              'open circle = ROI mean · solid circle = ROI maximum (single strongest voxel)')
 ax.set_title('tTIS exceeds the lowest effective level; TUS comes close',
              loc='left', fontsize=13, pad=22)
-save(fig, 'fig2_dose_vs_threshold')
+save(fig, 'fig3_dose_vs_threshold')
 
-# ===== Fig.3 標的レベル以上が及ぶ脳体積（内訳つき）=====
+# ===== Fig.2 標的レベル以上が及ぶ脳体積（内訳つき）=====
 fig, ax = base_axes(figsize=(7.6, 3.1))
 labels = ['tTIS', 'TUS']
 contig = [35.3, 6.4]                 # ROI と地続き
@@ -158,6 +159,6 @@ ax.set_xlabel('brain volume above the ROI mean [mL]\n'
 ax.set_title('TUS confines the field above the ROI mean; tTIS does not',
              loc='left', fontsize=13, pad=14)
 ax.invert_yaxis()
-save(fig, 'fig3_reach_volume')
+save(fig, 'fig2_reach_volume')
 
 print('figures -> %s' % OUT)
