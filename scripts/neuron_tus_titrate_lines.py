@@ -26,7 +26,7 @@ from neuron_tus_profile_source import ProfileAcousticSource
 logger.setLevel(logging.ERROR)
 F = 250e3
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-SRC = os.path.join(ROOT, 'results', 'neuron_tus_line_pressure2_2026-10-15.txt')
+SRC = os.environ.get('LINE_PRESSURE', os.path.join(ROOT, 'results', 'neuron_tus_line_pressure2_2026-10-15.txt'))  # prod2 は results/prod2/ を渡す
 
 
 def load_lines(path):

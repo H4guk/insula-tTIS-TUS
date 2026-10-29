@@ -16,6 +16,7 @@ Sim4Life.lite の Python コンソールに**全文を貼り付けて**実行す
 - **設計計算（ローカル）**: `plan_frequency_grid.py`（f=250kHz）`plan_transducer.py`（F#=1.21）
 - **本番パイプライン**: `build_transducer.py` → `tus_assign_materials.py` → `tus_setup_source.py` → `tus_setup_grid.py` → `tus_verify_voxels.py` → `tus_run.py`
 - **食い込みの確かめ**: `tus_transducer_overlap.py`（`tTIS_LF1` のボクセルを頭の形にして、殻が頭の組織と重ならないか・開口の中の頭の一番外を測る。#25 で殻を頭の外に出した根拠）
+- **開口の走査**: `tus_aperture_scan.py`（開口 40〜70 mm ごとに、頭の外に置くのに要る R・F#・フレネル数。64 mm に決めた根拠）
 - **安全**: `tus_safety_drive.py`（MI<1.9 での焦点線量・ISPPA。4-4a の再測）
 - **ROI 平均の音圧**: `tus_roi_pressure.py`（安全駆動での ROI 平均 |p| [kPa]。脳内の目安 120 kPa（Lee 2021）と比べる。#20）
 - **解析**: `tus_selectivity.py`（脳マスク＋選択性）`tus_focus_analysis.py` `tus_axial_profile.py` `tus_focus_size.py`（5-2 -6dB 焦点サイズ）

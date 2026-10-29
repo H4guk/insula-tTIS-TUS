@@ -2,18 +2,18 @@
 # 頭の形は tTIS_LF1 のボクセル（Transducer を登録していないので、組織だけの頭）を使う。tTIS_LF1 を Run した後に流す。
 # 殻は build_transducer.py と同じ: 焦点 F 中心、厚さ 3 mm、軸 d = (T7 - F)/|T7 - F| の半径 20 mm の円柱で切り出し。
 # 結果（2026-10-29・prod）: 旧い殻（R_OUT = |T7 - F| = 48.51 mm）は 3976 セルのうち 1575（40%）が頭の組織と重なっていた
-#   （SAT 770・Skin 391・耳 305・唾液腺 94）。開口の中の頭の一番外は 65.03 mm → build_transducer.py の R_IN_CLEAR = 67.53 mm。
+#   （SAT 770・Skin 391・耳 305・唾液腺 94）。その後、開口を 64 mm にした（tus_aperture_scan.py）: 頭の一番外 74.51 mm → R_IN_CLEAR 77.01 mm。
 import numpy as np, h5py
 import s4l_v1.document as document
 
 FOCUS = np.array([99.1, 295.0, 1562.2])
 T7 = np.array([94.7869, 335.8444, 1536.3872])     # Elec_T7 の重心（probe_transducer_pose.py・prod と旧で同じ）
-SHELL, CAP_R = 3.0, 20.0
+SHELL, CAP_R = 3.0, 32.0                           # build_transducer.py と同じ（開口 64mm）
 GAP = 2.0                                          # 頭皮と殻の内側の面のあいだにとる水の厚さ [mm]（提案値）
 
-R_IN = 65.03 + 0.5 + GAP                           # build_transducer.py の R_IN_CLEAR と同じ
+R_IN = 74.51 + 0.5 + GAP                           # build_transducer.py の R_IN_CLEAR と同じ
 R_OUT = R_IN + SHELL
-D = (T7 - FOCUS) / R_OUT
+D = (T7 - FOCUS) / np.linalg.norm(T7 - FOCUS)      # 軸の単位ベクトル（R_OUT で割らない）
 
 
 def sim(name):
@@ -54,9 +54,9 @@ head = name3 != 'Background'                       # 電極はボクセル 0 な
 print('[grid] tTIS_LF1 %s  頭の組織のセル %d' % (str(name3.shape), int(head.sum())))
 
 # 円柱（開口）の中だけ見る: 軸方向 t > 0（T7 側）、軸からの距離 <= CAP_R
-ix = np.where((cx > FOCUS[0] - 70) & (cx < FOCUS[0] + 70))[0]
-iy = np.where((cy > FOCUS[1] - 70) & (cy < FOCUS[1] + 70))[0]
-iz = np.where((cz > FOCUS[2] - 70) & (cz < FOCUS[2] + 70))[0]
+ix = np.where((cx > FOCUS[0] - 90) & (cx < FOCUS[0] + 90))[0]
+iy = np.where((cy > FOCUS[1] - 90) & (cy < FOCUS[1] + 90))[0]
+iz = np.where((cz > FOCUS[2] - 90) & (cz < FOCUS[2] + 90))[0]
 X, Y, Z = np.meshgrid(cx[ix], cy[iy], cz[iz], indexing='ij')
 P = np.stack([X - FOCUS[0], Y - FOCUS[1], Z - FOCUS[2]], axis=-1)
 t = P @ D
@@ -89,8 +89,8 @@ for label, m in (('すべての組織', np.ones(rr.shape, bool)),
 
 # 軸からの距離ごとの頭の一番外（どこが効いているか）
 print('[ring] 軸からの距離ごとの一番外 [mm]:')
-for a, b in ((0, 5), (5, 10), (10, 15), (15, 20)):
-    m = (pp >= a) & (pp < b) if b < 20 else (pp >= a) & (pp <= b)
+for a, b in ((0, 8), (8, 16), (16, 24), (24, 32)):
+    m = (pp >= a) & (pp < b) if b < CAP_R else (pp >= a) & (pp <= b)
     if m.any():
         j = int(np.argmax(np.where(m, rr, -1)))
         print('       %2d〜%2d mm: %.2f（%s）' % (a, b, rr[j], nn[j]))
@@ -100,6 +100,6 @@ rmax = float(rr.max())
 print('')
 print('=== (3) 置き直しの目安（水の層 GAP %.1f mm・ボクセル 1 mm の半分を足す）===' % GAP)
 need_in = rmax + 0.5 + GAP
-print('[R   ] 殻の内側の面 R_IN >= %.2f mm → R_OUT = %.2f mm（今 %.2f）・F# = %.2f（今 %.2f、開口 40 mm のまま）'
-      % (need_in, need_in + SHELL, R_OUT, (need_in + SHELL) / 40.0, R_OUT / 40.0))
+print('[R   ] 殻の内側の面 R_IN >= %.2f mm → R_OUT = %.2f mm（今 %.2f）・F# = %.2f（今 %.2f、開口 %.0f mm）'
+      % (need_in, need_in + SHELL, R_OUT, (need_in + SHELL) / (2 * CAP_R), R_OUT / (2 * CAP_R), 2 * CAP_R))
 print('=== 食い込みの確かめ %s（読み取りのみ・保存していない）===' % ('PASS' if int(over.sum()) == 0 else 'FAILED: 殻が頭の組織と %d セル重なる' % int(over.sum())))
