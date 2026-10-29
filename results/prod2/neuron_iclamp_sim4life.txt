@@ -1,0 +1,14 @@
+# prod2 H（IClamp_Neuron）: 34 → 35 → 36（MRG 1.5・2・3・5・10 倍＝2.1825〜14.55 nA、名前の 080〜125 は元の倍率）→ GUI（36 °C・10 本・Solver Duration 40 ms・Titration off）→ Run → 37
+# 2026-10-30。1 回目の Run は Duration を入れ忘れて 13 秒で終わり、10 本とも no spike（無効）。Duration 40 ms で回し直したのが下。
+ic_m16_080 [Motor MRG Neuron 16.00um]          no spike
+ic_m16_090 [Motor MRG Neuron 16.00um]          spiking sections   16 | first node[3] 5.133 ms | end node[0] 5.155 ms
+ic_m16_100 [Motor MRG Neuron 16.00um]          spiking sections   16 | first node[3] 5.068 ms | end node[0] 5.100 ms
+ic_m16_110 [Motor MRG Neuron 16.00um]          spiking sections   16 | first node[3] 5.033 ms | end node[0] 5.065 ms
+ic_m16_125 [Motor MRG Neuron 16.00um]          spiking sections   16 | first node[3] 5.008 ms | end node[0] 5.043 ms
+ic_sun_080 [Unmyelinated Sundt Neuron 0.80um]  no spike
+ic_sun_090 [Unmyelinated Sundt Neuron 0.80um]  no spike
+ic_sun_100 [Unmyelinated Sundt Neuron 0.80um]  no spike
+ic_sun_110 [Unmyelinated Sundt Neuron 0.80um]  spiking sections  455 | first section[227] 5.560 ms | end section[0] 16.835 ms
+ic_sun_125 [Unmyelinated Sundt Neuron 0.80um]  spiking sections  455 | first section[228] 5.373 ms | end section[0] 16.708 ms
+# まとめ: results/neuron_iclamp_sim4life_2026-10-18.txt と同じ（Sim4Life / MorphoSONIC の閾値 = MRG 16 µm 1.5〜2.0・Sundt 1.0〜1.1）。
+# 違いは ic_sun_110 の最初の区画だけ（10-18 は section[228] 5.563 ms、今回は隣の section[227] 5.560 ms）。端の時刻は同じ。
