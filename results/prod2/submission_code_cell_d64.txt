@@ -1,0 +1,5 @@
+# scripts/submission_code_cell.py run in insula-tTIS-TUS-prod2, 2026-10-29（開口 64 mm。k は骨を含む全体の最大で決めている＝ITRUSST の MItc とちがう）
+tTIS  selectivity 0.358 | >= target level 35.9 mL (8.6x ROI), 98% contiguous with ROI
+      ROI mean 0.2265 V/m = 113% of 0.2 V/m; 74.5% of the ROI above it
+TUS   selectivity 0.224 | >= target level 18.2 mL (4.3x ROI), 73% contiguous with ROI
+      reference MI 15.7 -> source 0.121 MPa; ROI mean 102.1 kPa = 85% of 120 kPa; 34.8% of the ROI above it

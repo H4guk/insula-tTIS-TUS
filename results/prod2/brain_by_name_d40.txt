@@ -1,0 +1,27 @@
+# scripts/brain_by_name.py run in insula-tTIS-TUS-prod2, 2026-10-29
+[tTIS] s1/s2 = 0.619843 （期待 0.6199）
+
+=== tTIS（TI 包絡・合計 2 mA）===
+  旧い脳（σ 帯）の中身: Cerebrum_grey_matter 527.1, Cerebrum_white_matter 367.6, Commissura_posterior 0.0, Corpus_callosum 12.8, Eye_lens 0.4, Hippocampus 2.1, Hypothalamus 0.6, Medulla_oblongata 3.3, Midbrain 2.0, Nerve 13.1, Tendon_ligament 6.9, Trachea_wall 9.3
+  [旧 σ 帯] 脳 945.1 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 0.2265 V/m ・ **選択性 0.3758**
+      V_target 50.5 mL（ROI の 12.1 倍・脳の 5.34 %）・V_half 159.2 mL・ROI と地続き 21.9 mL（43.3 %）
+      脳内最大 2.412 V/m ＝ 標的の **10.65 倍** @ (48.5, 274.5, 1482.5) ・ ROI 中心から 96.6 mm ・ 組織 Tendon_ligament
+  [新 12 組織] 脳 1041.5 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 0.2265 V/m ・ **選択性 0.3576**
+      V_target 35.9 mL（ROI の 8.6 倍・脳の 3.45 %）・V_half 190.6 mL・ROI と地続き 35.3 mL（98.4 %）
+      脳内最大 1.04 V/m ＝ 標的の **4.59 倍** @ (72.5, 276.5, 1511.5) ・ ROI 中心から 60.2 mm ・ 組織 Medulla_oblongata
+
+=== TUS（|p|・音源 1 MPa の参照駆動。比なので駆動によらない）===
+  旧い脳（c・ρ 帯）の中身: Cerebellum 110.0, Cerebrum_grey_matter 526.8, Cerebrum_white_matter 367.5, Commissura_posterior 0.0, Corpus_callosum 13.0, Esophagus_wall 1.4, Hippocampus 2.1, Hypophysis 0.7, Hypothalamus 0.6, Medulla_oblongata 3.3, Midbrain 1.9, Pineal_body 0.0, Pons 8.2, Salivary_gland 47.8, Thalamus 7.9
+  [旧 c・ρ 帯] 脳 1091.2 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 5.866e+05 Pa ・ **選択性 0.1936**
+      V_target 22.4 mL（ROI の 5.3 倍・脳の 2.06 %）・V_half 84.1 mL・ROI と地続き 20.0 mL（89.0 %）
+      脳内最大 1.933e+06 Pa ＝ 標的の **3.30 倍** @ (102.5, 318.3, 1557.5) ・ ROI 中心から 24.0 mm ・ 組織 Cerebrum_grey_matter
+  [新 12 組織] 脳 1041.4 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 5.866e+05 Pa ・ **選択性 0.1947**
+      V_target 22.2 mL（ROI の 5.3 倍・脳の 2.13 %）・V_half 79.8 mL・ROI と地続き 20.0 mL（90.1 %）
+      脳内最大 1.933e+06 Pa ＝ 標的の **3.30 倍** @ (102.5, 318.3, 1557.5) ・ ROI 中心から 24.0 mm ・ 組織 Cerebrum_grey_matter
+
+=== 比較（新 12 組織・両手法で同じ脳）===
+  手法     選択性        V_target[mL]   ROI の何倍      脳内最大/標的          ROI 中心からの距離[mm]
+  tTIS   0.3576     35.9           8.6          4.59             60.2
+  TUS    0.1947     22.2           5.3          3.30             24.0
+
+=== 脳を名前で定義し直した再計算 完了（読み取りのみ・保存していない）===

@@ -1,0 +1,14 @@
+# scripts/brain_by_name.py run in insula-tTIS-TUS-prod2, 2026-10-29（開口 64 mm）。tTIS の部分は brain_by_name_d40.txt と同じ
+=== TUS（|p|・音源 1 MPa の参照駆動。比なので駆動によらない）===
+  旧い脳（c・ρ 帯）の中身: Cerebellum 110.0, Cerebrum_grey_matter 526.9, Cerebrum_white_matter 367.7, Commissura_posterior 0.0, Corpus_callosum 12.9, Esophagus_wall 1.4, Hippocampus 2.1, Hypophysis 0.7, Hypothalamus 0.6, Medulla_oblongata 3.3, Midbrain 1.9, Pineal_body 0.0, Pons 8.2, Salivary_gland 47.9, Thalamus 7.9
+  [旧 c・ρ 帯] 脳 1091.5 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 8.466e+05 Pa ・ **選択性 0.2261**
+      V_target 21.3 mL（ROI の 5.1 倍・脳の 1.95 %）・V_half 107.1 mL・ROI と地続き 13.3 mL（62.4 %）
+      脳内最大 2.849e+06 Pa ＝ 標的の **3.36 倍** @ (90.5, 318.8, 1526.5) ・ ROI 中心から 43.8 mm ・ 組織 Salivary_gland
+  [新 12 組織] 脳 1041.6 mL ・ ROI のうち脳 100.0 % ・ 標的レベル 8.466e+05 Pa ・ **選択性 0.2238**
+      V_target 18.2 mL（ROI の 4.3 倍・脳の 1.74 %）・V_half 97.2 mL・ROI と地続き 13.3 mL（73.0 %）
+      脳内最大 2.708e+06 Pa ＝ 標的の **3.20 倍** @ (102.5, 317.8, 1557.5) ・ ROI 中心から 23.5 mm ・ 組織 Cerebrum_grey_matter
+
+=== 比較（新 12 組織・両手法で同じ脳）===
+  手法     選択性        V_target[mL]   ROI の何倍      脳内最大/標的          ROI 中心からの距離[mm]
+  tTIS   0.3576     35.9           8.6          4.59             60.2
+  TUS    0.2238     18.2           4.3          3.20             23.5
