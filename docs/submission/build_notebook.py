@@ -65,18 +65,20 @@ print('%-12s %6d %6d' % ('TOTAL', total, 850))
 
 FIG_CAPS = [
     ("figures/fig1_field_slices.png",
-     "**Figure 1** Beat-envelope amplitude (tTIS) and pressure amplitude (TUS) on the insula plane (X = 99.5 mm), both panels normalised to the ROI mean. "
-     "Black line: ROI-mean contour (1.0). Dashed circle: ROI (r = 10 mm). Grey line: brain outline; "
-     "area outside the brain is dimmed. The contour encloses the ROI for TUS but not for tTIS."),
+     "**Figure 1** Field distributions on the insula plane (*X* = 99.5 mm). The left panel shows the tTIS "
+     "beat-envelope amplitude and the right panel the TUS pressure amplitude, both normalised to the ROI mean. "
+     "The solid black line is the ROI-mean contour (1.0), the dashed circle is the ROI (*r* = 10 mm) and the "
+     "grey line is the brain outline; the area outside the brain is dimmed. The contour encloses the ROI for "
+     "TUS but not for tTIS."),
     ("figures/fig2_reach_volume.png",
-     "**Figure 2** Brain volume above the ROI mean. Solid: contiguous with the ROI. Hatched: detached. "
-     "Dashed line: ROI volume (4.19 mL). 98% of the tTIS volume and 88% of the TUS volume are contiguous "
-     "with the ROI, so the tTIS field spreads as one large region around it, 8.6 times the ROI; the TUS "
-     "volume stays within 1.7 times."),
+     "**Figure 2** Brain volume above the ROI mean for each method. Solid bars are the parts contiguous with "
+     "the ROI, hatched bars the detached parts, and the dashed line marks the ROI volume (4.19 mL). As 98% of "
+     "the tTIS volume and 88% of the TUS volume are contiguous with the ROI, the tTIS field spreads as one "
+     "large region around it, 8.6 times the ROI, whereas the TUS volume stays within 1.7 times."),
     ("figures/fig3_dose_vs_threshold.png",
-     "**Figure 3** ROI amplitude relative to the lowest effective level (1.0 = 0.2 V/m for tTIS; "
-     "120 kPa in situ for TUS). Open circle: ROI mean. Filled: ROI maximum, the "
-     "single strongest voxel. Right: fraction of the ROI above the lowest effective level."),
+     "**Figure 3** ROI amplitude relative to the lowest effective level. The level (1.0, dashed line) is "
+     "0.2 V/m for tTIS and 120 kPa in situ for TUS. Open circles show the ROI mean and solid circles the ROI "
+     "maximum, the single strongest voxel. The values on the right give the fraction of the ROI above this level."),
 ]
 
 def md(src):

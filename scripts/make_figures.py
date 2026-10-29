@@ -131,7 +131,7 @@ ax.set_xlim(0, 3.6)
 ax.set_xticks([0.0, 0.5, 1.0, 1.5, 2.0, 2.5])   # データ域だけ目盛る（右は注記の場所）
 ax.set_ylim(1.6, -0.6)
 ax.set_xlabel('ROI amplitude / lowest effective level   (1.0 = 0.2 V/m; 120 kPa in situ)\n'
-              'open circle = ROI mean · filled = ROI maximum (single strongest cell)')
+              'open circle = ROI mean · solid circle = ROI maximum (single strongest voxel)')
 ax.set_title('tTIS exceeds the lowest effective level; TUS comes close',
              loc='left', fontsize=13, pad=22)
 save(fig, 'fig3_dose_vs_threshold')
