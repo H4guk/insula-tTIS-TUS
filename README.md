@@ -1,5 +1,58 @@
 # insula-tTIS-TUS
 
+## English summary
+
+Code and results for *Focality and Reach of Transcranial Ultrasound Versus Temporal Interference Stimulation of the Human Insula Within Safety Limits: A Computational Study* (Ryo Shimbo, Sim4Life Student Competition 2026).
+Code comments and the notes below this section are mostly in Japanese.
+
+### Contents
+- `scripts/`: scripts pasted into the Sim4Life.lite Python console. They rebuild the whole project from an empty document. Figures and the MorphoSONIC runs are done locally. `scripts/README.md` lists every script.
+- `results/prod2/`: outputs of the final rebuild (2026-10-29/30). All numbers in the report come from here.
+- `docs/submission/`: the report notebook and `build_notebook.py`, which builds the notebook and checks the word limits.
+
+### Rebuild order (Sim4Life.lite 9.6, Python console)
+| Step | Scripts (in order) |
+|---|---|
+| Model | `load_yoonsun`, `detect_coordinate_system`, `define_insula_roi`, `place_electrodes`, `build_transducer` |
+| tTIS pair 2 (Fp1-Fp2, 2010 Hz) | `assign_materials`, `setup_boundary`, `setup_grid`, `verify_voxels`, `run_simulation` |
+| tTIS pair 1 (T7-P7, 2000 Hz) | the same five scripts, with `SIM_NAME = 'tTIS_LF1'`, `FREQ = 2000.0` and `DRIVE` on `Elec_T7`/`Elec_P7` |
+| TUS | `tus_assign_materials`, `tus_setup_source`, `tus_setup_grid`, `tus_verify_voxels`, `tus_run`, `tus_transducer_overlap` |
+| Field results (read-only) | `submission_code_cell`, `brain_by_name`, `ti_roi_threshold_fraction`, `tus_safety_drive`, `make_fig1_slices`, `tus_mitc_soft_tissue` |
+| tTIS neurons | `neuron_offtarget_search`, `neuron_ti_create`, `neuron_ti_place_l2_mrg16`, `neuron_ti_place_l2_sundt`, `neuron_ti_ramp_setup`, `neuron_ti_pulse_window`, then Run and `neuron_ti_read_titration_l2` (once for the MRG axons, once for the Sundt axons) |
+| TUS neurons | `neuron_tus_line_pressure2` (Sim4Life), then locally `LINE_PRESSURE=results/prod2/neuron_tus_line_pressure2_d64.txt python scripts/neuron_tus_titrate_lines.py <mrg16\|sundt> <line>` for each of the 7 lines |
+| Implementation check | `neuron_iclamp_create`, `neuron_iclamp_sweep_setup`, `neuron_iclamp_set_amps`, Run, `neuron_iclamp_read` |
+| Figures 2 and 3 | `make_figures.py` locally (numpy, matplotlib) |
+
+### Steps done in the GUI
+- `TI_Neuron` sources: Sinusoidal, 2000 Hz with amplitude 0.2056 and 2010 Hz with amplitude 0.3316 (the scales that turn the 1 V fields of `tTIS_LF1` and `tTIS_LF2` into 0.891 and 1.109 mA, from `ti_analysis.py`). Check that the second source really is 2010 Hz.
+- Set the temperature of `TI_Neuron` and `IClamp_Neuron` to 36 °C, the same as MorphoSONIC.
+- Press Clear Results before changing a simulation that already has results; otherwise the scripts' assignments are silently ignored.
+- `TI_Neuron`: put the 7 MRG axons, then the 7 Sundt axons, into the neuron settings and Run with Titration on.
+- `IClamp_Neuron`: set the solver duration to 40 ms and turn Titration off before Run.
+- File → Save.
+
+### Local MorphoSONIC environment
+Python 3.11 with PySONIC (tjjlemaire/PySONIC 10ed530) and MorphoSONIC (tjjlemaire/MorphoSONIC 5d0d264) installed with `pip install -e --no-deps`, NEURON 9.0.2, numpy 1.26.4 and pandas 2.1.4 (pandas 3 silently breaks PySONIC).
+Run `nrnivmodl` in `MorphoSONIC/nmodl`, and fetch the Git LFS lookup tables `MRGnode_lookups_fs1.00.pkl` and `SUseg_lookups_fs1.00.pkl`.
+Details are in the docstring of `scripts/archive/neuron_morpho_gate.py`.
+
+### Where the report numbers come from (`results/prod2/`)
+| Report | File |
+|---|---|
+| Selectivity, volume above the ROI mean, reach | `submission_code_cell_d64.txt`, `brain_by_name_d64.txt` |
+| Skull pressure peak at the safety limit | `tus_mitc_soft_tissue_d64.txt` |
+| tTIS firing thresholds (MRG, Sundt) | `neuron_ti_titration_l2_mrg16_ramp.json`, `neuron_ti_titration_l2_sundt_ramp.json` |
+| TUS firing thresholds | `neuron_tus_titrate_lines_d64.jsonl` |
+| Sim4Life vs MorphoSONIC check | `neuron_iclamp_sim4life.txt` |
+
+### Not included
+- Yoon-sun model data: IT'IS Virtual Population, not redistributable. Sim4Life.lite ships it, and `load_yoonsun.py` loads it.
+- The `.smash` project, which was submitted to the competition.
+
+---
+
+> 以下は日本語の研究メモ（初期の tTIS 部分のまま）。最新の再現手順と提出物の数値の出どころは、上の English summary と `scripts/README.md` を見る。
+
 **非侵襲脳刺激の比較シミュレーション：tTIS vs TUS による島皮質ターゲティング**
 
 島皮質（insular cortex）に非侵襲で刺激を届けるのに **tTIS（時間干渉刺激）** と **TUS（経頭蓋集束超音波）** の
