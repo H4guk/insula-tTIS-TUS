@@ -9,7 +9,7 @@ FOCUS_MM, ROI_R_MM = np.array([99.1, 295.0, 1562.2]), 10.0       # left insula, 
 BRAIN = ('Cerebrum_grey_matter', 'Cerebrum_white_matter', 'Cerebellum', 'Corpus_callosum', 'Pons',
          'Thalamus', 'Medulla_oblongata', 'Hippocampus', 'Midbrain', 'Hypothalamus', 'Pineal_body',
          'Commissura_posterior')                                   # same twelve tissues for both methods
-I_MA = (0.891, 1.109)                    # tTIS currents, 2 mA in total (Inoue 2025)
+I_MA = (0.891, 1.109)                    # tTIS currents, 2 mA in total [1]
 MI_LIMIT, F_MHZ = 1.9, 0.25              # TUS safety limit and frequency
 LOWER_VM, LOWER_KPA = 0.2, 120.0         # lowest effective levels: tTIS [1], TUS in situ [3]
 
